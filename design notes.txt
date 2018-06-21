@@ -1,0 +1,63 @@
+Tasks
+ - View tech list
+ - View tech
+ - Add tech
+ - Delete tech
+ - Edit tech
+
+Documents
+ - Tech edit form
+        ID, uint32 hex
+        Name, varchar[32]
+        Category, varchar[16] - can this be enum?
+        FieldName, varchar[32]
+        CostPerDay, float
+        NumberDays, float
+        Prerequisites (up to 3)
+        Grantrequisites (up to 3)
+        Permanizes (up to 1 and a permanizes self checkbox)
+        An indicator of whether a tech will be overwritten if saved
+        Save
+            if new
+                write tech
+                write prereqs
+                write grantreqs
+                write permanizes
+            if existing
+                if tech changed
+                    delete tech
+                    write tech
+                if prereqs changed
+                    delete prereqs
+                    write prereqs
+                if grantreqs changed 
+                    delete grantreqs
+                    write grantreqs
+                if permanizes changed
+                    delete permanizes
+                    write permanizes
+        Revert
+            View Tech (populate fields)
+ - Tech list view
+        ID, Name (for each tech in list)
+        can filter by ID range
+        can filter by name string match
+        can filter by field name string match
+        can filter by category
+        can clear all filters
+        Update filters
+        Add tech
+        Edit tech
+        Delete tech
+        A visible log that also shows messages
+        checkbox to supress operation log entries
+        
+
+
+Functional dependencies
+  ID->Name,Category,FieldName,CostPerDay,NumberDays
+  ID->Prerequisites
+  ID->Grantrequisites
+  ID->Permanizes
+        
+        

@@ -1,0 +1,15 @@
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.csprojResolveAssemblyReference.cache
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.Properties.Resources.resources
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.csproj.GenerateResource.cache
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.csproj.CoreCompileInputs.cache
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\bin\Debug\TechTreeEditor.exe.config
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\bin\Debug\TechTreeEditor.exe
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\bin\Debug\TechTreeEditor.pdb
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\bin\Debug\Devart.Data.dll
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\bin\Debug\Devart.Data.MySql.dll
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\bin\Debug\Devart.Data.xml
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\bin\Debug\Devart.Data.MySql.xml
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.csproj.CopyComplete
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.exe
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.pdb
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.TechListView.resources
