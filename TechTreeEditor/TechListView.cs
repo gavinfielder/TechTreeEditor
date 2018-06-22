@@ -16,6 +16,17 @@ namespace TechTreeEditor
     {
         //Fields
         private MySqlConnection connection;
+        private List<TechEditView> openEditViews;
+        private int nextEditViewID = 0;
+        private struct FilterOptions
+        {
+            public bool idRangeActive, categoryActive, nameStringMatchActive, fieldNameActive;
+            public uint idRangeMin, idRangeMax;
+            public string category;
+            public string nameString;
+            public string fieldName;
+        }
+        FilterOptions currentFilters;
 
         //Constructor and Destructor
         public TechListView()
@@ -23,7 +34,17 @@ namespace TechTreeEditor
             InitializeComponent();
             connection = new MySqlConnection(Properties.Settings.Default.dbConnectionString);
             //connection.Open(); //changing to not always open
-
+            openEditViews = new List<TechEditView>();
+            //Set initial filter options
+            currentFilters.categoryActive = false;
+            currentFilters.idRangeActive = false;
+            currentFilters.nameStringMatchActive = false;
+            currentFilters.fieldNameActive = false;
+            currentFilters.idRangeMin = 0;
+            currentFilters.idRangeMax = 0xFFFFFFFF;
+            currentFilters.nameString = "";
+            currentFilters.fieldName = "";
+            currentFilters.category = "";
         }
         ~TechListView()
         {
@@ -36,6 +57,26 @@ namespace TechTreeEditor
             if (connection.State == ConnectionState.Open)
             {
                 connection.Close();
+            }
+        }
+
+        //Open or closes a new tech edit view
+        private void OpenEditView(TechEditView.ViewMode mode, uint id = 0)
+        {
+            openEditViews.Add(new TechEditView(nextEditViewID, id, mode));
+            nextEditViewID++;
+            openEditViews[openEditViews.Count - 1].techListView = this;
+            openEditViews[openEditViews.Count - 1].Visible = true;
+        }
+        public void CloseEditView(int viewID)
+        {
+            int i = 0;
+            while (i < openEditViews.Count && openEditViews[i].EditViewID != viewID)
+                i++;
+            if (i < openEditViews.Count)
+            {
+                openEditViews.RemoveAt(i);
+                //TechEditView handles closing and disposing the form
             }
         }
 
@@ -59,15 +100,37 @@ namespace TechTreeEditor
         }
         private void UpdateFiltersButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            /*
+            if (IDRangeMinInput.Text != "" || IDRangeMaxInput.Text != "")
+            {
+                currentFilters.idRangeActive = true;
+                currentFilters.idRangeMin = HexConverter.HexToInt(IDRangeMinInput.Text);
+                currentFilters.idRangeMax = HexConverter.HexToInt(IDRangeMaxInput.Text);
+            }
+            //TODO other filters
+            */
+            FetchTechList(currentFilters);
         }
         private void ClearFiltersButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            IDRangeMinInput.Text = "";
+            IDRangeMaxInput.Text = "";
+            CategoryComboBox.SelectedIndex = -1;
+            NameFilterInput.Text = "";
+            FieldNameInput.Text = "";
+            currentFilters.categoryActive = false;
+            currentFilters.idRangeActive = false;
+            currentFilters.nameStringMatchActive = false;
+            currentFilters.fieldNameActive = false;
+            currentFilters.idRangeMin = 0;
+            currentFilters.idRangeMax = 0xFFFFFFFF;
+            currentFilters.nameString = "";
+            currentFilters.fieldName = "";
+            currentFilters.category = "";
         }
         private void AddTechButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            OpenEditView(TechEditView.ViewMode.ADDING_NEW);
         }
         private void EditTechButton_Click(object sender, EventArgs e)
         {
@@ -89,9 +152,33 @@ namespace TechTreeEditor
         {
             //TODO
         }
+        private void TechListGrid_SelectionChanged(object sender, EventArgs e)
+        {
+            //Check if a record is selected
+            if (TechListGrid.SelectedRows.Count > 0)
+            {
+                //A record is selected. Activate record-contextual buttons
+                ViewTechButton.Enabled = true;
+                DeleteTechButton.Enabled = true;
+                EditTechButton.Enabled = true;
+                AddPrereqButton.Enabled = true;
+                AddGrantreqButton.Enabled = true;
+                AddPermanizesButton.Enabled = true;
+            }
+            else
+            {
+                //No record is selected. Deactivate record-contextual buttons
+                ViewTechButton.Enabled = false;
+                DeleteTechButton.Enabled = false;
+                EditTechButton.Enabled = false;
+                AddPrereqButton.Enabled = false;
+                AddGrantreqButton.Enabled = false;
+                AddPermanizesButton.Enabled = false;
 
+            }
+        }
         //Log management
-        private void Log(string message)
+        public void Log(string message)
         {
             LogDisplay.AppendText(message + "\r\n");
         }
@@ -285,6 +372,81 @@ namespace TechTreeEditor
             //Close the connection
             connection.Close();
         }
+        private void FetchTechList(FilterOptions filters)
+        {
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT id,name,category " +
+                                    "FROM tech ";
+
+            //Structure the filter command conditions
+            int numFilters = 0;
+            if (filters.idRangeActive || 
+                filters.categoryActive || 
+                filters.fieldNameActive || 
+                filters.nameStringMatchActive)
+                command.CommandText += "WHERE ";
+            if (filters.idRangeActive)
+            {
+                command.CommandText += "(id BETWEEN " + filters.idRangeMin +
+                    " AND " + filters.idRangeMax + ") ";
+                numFilters++;
+            }
+            if (filters.categoryActive)
+            {
+                if (numFilters > 0) command.CommandText += "AND ";
+                command.CommandText += "category = '" + filters.category + "' ";
+                numFilters++;
+            }
+            if (filters.fieldNameActive)
+            {
+                if (numFilters > 0) command.CommandText += "AND ";
+                command.CommandText += "field_name LIKE '%" + filters.fieldName + "%' ";
+                numFilters++;
+            }
+            if (filters.nameStringMatchActive)
+            {
+                if (numFilters > 0) command.CommandText += "AND ";
+                command.CommandText += "name LIKE '%" + filters.nameString + "%' ";
+                numFilters++;
+            }
+            command.CommandText +=  "ORDER BY id ASC;";
+            uint rowsFetched = 0;
+            Log("Fetching data with command = \"" + command.CommandText + "\"");
+
+            try
+            {
+                connection.Open();
+                TechListGrid.Rows.Clear();
+                MySqlDataReader reader = command.ExecuteReader();
+                string[] values = new string[3];
+                while (reader.Read())
+                {
+                    values[0] = HexConverter.IntToHex(reader.GetUInt32(0));
+                    values[1] = reader.GetString(1);
+                    values[2] = reader.GetString(2);
+                    TechListGrid.Rows.Add(values);
+                    rowsFetched++;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                Log("An error occurred: " + ex.Message);
+            }
+            /*catch (Exception ex) //For debug only
+            {
+                Log("An unhandled exception occurred: " + ex.Message);
+            }*/
+            finally
+            {
+                connection.Close();
+                Log("Fetched " + rowsFetched + " records.");
+            }
+
+        }
+        
+
+
 
 
 

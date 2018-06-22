@@ -70,20 +70,24 @@
             // 
             // IDInput
             // 
+            this.IDInput.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.IDInput.Location = new System.Drawing.Point(82, 17);
+            this.IDInput.MaxLength = 8;
             this.IDInput.Name = "IDInput";
             this.IDInput.Size = new System.Drawing.Size(106, 20);
             this.IDInput.TabIndex = 0;
+            this.IDInput.Text = "00000000";
             this.IDInput.TextChanged += new System.EventHandler(this.IDInput_TextChanged);
+            this.IDInput.Leave += new System.EventHandler(this.IDInput_Leave);
             // 
             // IDInputLabel
             // 
             this.IDInputLabel.AutoSize = true;
-            this.IDInputLabel.Location = new System.Drawing.Point(58, 20);
+            this.IDInputLabel.Location = new System.Drawing.Point(47, 20);
             this.IDInputLabel.Name = "IDInputLabel";
-            this.IDInputLabel.Size = new System.Drawing.Size(21, 13);
+            this.IDInputLabel.Size = new System.Drawing.Size(38, 13);
             this.IDInputLabel.TabIndex = 1;
-            this.IDInputLabel.Text = "ID:";
+            this.IDInputLabel.Text = "ID:  0x";
             // 
             // label1
             // 
@@ -185,7 +189,8 @@
             this.CostPerDayInput.Name = "CostPerDayInput";
             this.CostPerDayInput.Size = new System.Drawing.Size(106, 20);
             this.CostPerDayInput.TabIndex = 14;
-            this.CostPerDayInput.TextChanged += new System.EventHandler(this.CostPerDayInput_TextChanged);
+            this.CostPerDayInput.Text = "0.0";
+            this.CostPerDayInput.Leave += new System.EventHandler(this.CostPerDayInput_Leave);
             // 
             // NumberDaysInput
             // 
@@ -193,7 +198,8 @@
             this.NumberDaysInput.Name = "NumberDaysInput";
             this.NumberDaysInput.Size = new System.Drawing.Size(106, 20);
             this.NumberDaysInput.TabIndex = 15;
-            this.NumberDaysInput.TextChanged += new System.EventHandler(this.NumberDaysInput_TextChanged);
+            this.NumberDaysInput.Text = "0.0";
+            this.NumberDaysInput.Leave += new System.EventHandler(this.NumberDaysInput_Leave);
             // 
             // label7
             // 
@@ -245,6 +251,7 @@
             // 
             // CategoryComboBox
             // 
+            this.CategoryComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.CategoryComboBox.FormattingEnabled = true;
             this.CategoryComboBox.Location = new System.Drawing.Point(270, 43);
             this.CategoryComboBox.Name = "CategoryComboBox";
@@ -408,6 +415,7 @@
             this.AlwaysViewSelectedCheckBox.TabIndex = 35;
             this.AlwaysViewSelectedCheckBox.Text = "Always view the currently selected tech in list view (View mode only)";
             this.AlwaysViewSelectedCheckBox.UseVisualStyleBackColor = true;
+            this.AlwaysViewSelectedCheckBox.Visible = false;
             this.AlwaysViewSelectedCheckBox.CheckedChanged += new System.EventHandler(this.AlwaysViewSelectedCheckBox_CheckedChanged);
             // 
             // TechEditView
@@ -426,6 +434,7 @@
             this.MaximumSize = new System.Drawing.Size(564, 546);
             this.Name = "TechEditView";
             this.Text = "View / Edit Tech";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TechEditView_FormClosing);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.OtherInformationGroupBox.ResumeLayout(false);

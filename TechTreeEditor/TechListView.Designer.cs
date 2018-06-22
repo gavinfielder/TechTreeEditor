@@ -32,23 +32,20 @@
             this.LogGroupBox = new System.Windows.Forms.GroupBox();
             this.LogDisplay = new System.Windows.Forms.TextBox();
             this.TechListGrid = new System.Windows.Forms.DataGridView();
-            this.TechID = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.TechName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.TechCategory = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.hammertechtreedbDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.hammertechtreedbDataSet = new TechTreeEditor.hammertechtreedbDataSet();
             this.TechListGroupBox = new System.Windows.Forms.GroupBox();
+            this.CategoryComboBox = new System.Windows.Forms.ComboBox();
             this.UpdateFiltersButton = new System.Windows.Forms.Button();
             this.ClearFiltersButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
-            this.textBox5 = new System.Windows.Forms.TextBox();
+            this.FieldNameInput = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.textBox4 = new System.Windows.Forms.TextBox();
+            this.NameFilterInput = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.IDRangeMaxInput = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.IDRangeMinInput = new System.Windows.Forms.TextBox();
             this.AddTechButton = new System.Windows.Forms.Button();
             this.DeleteTechButton = new System.Windows.Forms.Button();
             this.EditTechButton = new System.Windows.Forms.Button();
@@ -58,6 +55,9 @@
             this.AddGrantreqButton = new System.Windows.Forms.Button();
             this.AddPermanizesButton = new System.Windows.Forms.Button();
             this.ViewTechButton = new System.Windows.Forms.Button();
+            this.id = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.name = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.category = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.LogGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TechListGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.hammertechtreedbDataSetBindingSource)).BeginInit();
@@ -82,6 +82,7 @@
             this.LogDisplay.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.LogDisplay.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.LogDisplay.Location = new System.Drawing.Point(6, 19);
             this.LogDisplay.Multiline = true;
             this.LogDisplay.Name = "LogDisplay";
@@ -94,46 +95,24 @@
             // 
             this.TechListGrid.AllowUserToAddRows = false;
             this.TechListGrid.AllowUserToDeleteRows = false;
+            this.TechListGrid.AllowUserToResizeRows = false;
             this.TechListGrid.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.TechListGrid.AutoGenerateColumns = false;
             this.TechListGrid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.TechListGrid.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.TechListGrid.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.TechID,
-            this.TechName,
-            this.TechCategory});
-            this.TechListGrid.DataSource = this.hammertechtreedbDataSetBindingSource;
+            this.id,
+            this.name,
+            this.category});
             this.TechListGrid.Location = new System.Drawing.Point(6, 71);
             this.TechListGrid.Name = "TechListGrid";
             this.TechListGrid.ReadOnly = true;
             this.TechListGrid.RowHeadersVisible = false;
+            this.TechListGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.TechListGrid.Size = new System.Drawing.Size(641, 285);
             this.TechListGrid.TabIndex = 1;
-            // 
-            // TechID
-            // 
-            this.TechID.HeaderText = "ID";
-            this.TechID.Name = "TechID";
-            this.TechID.ReadOnly = true;
-            // 
-            // TechName
-            // 
-            this.TechName.HeaderText = "Name";
-            this.TechName.Name = "TechName";
-            this.TechName.ReadOnly = true;
-            // 
-            // TechCategory
-            // 
-            this.TechCategory.HeaderText = "Category";
-            this.TechCategory.Name = "TechCategory";
-            this.TechCategory.ReadOnly = true;
-            // 
-            // hammertechtreedbDataSetBindingSource
-            // 
-            this.hammertechtreedbDataSetBindingSource.DataSource = this.hammertechtreedbDataSet;
-            this.hammertechtreedbDataSetBindingSource.Position = 0;
+            this.TechListGrid.SelectionChanged += new System.EventHandler(this.TechListGrid_SelectionChanged);
             // 
             // hammertechtreedbDataSet
             // 
@@ -144,17 +123,17 @@
             // 
             this.TechListGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
+            this.TechListGroupBox.Controls.Add(this.CategoryComboBox);
             this.TechListGroupBox.Controls.Add(this.UpdateFiltersButton);
             this.TechListGroupBox.Controls.Add(this.ClearFiltersButton);
             this.TechListGroupBox.Controls.Add(this.label4);
-            this.TechListGroupBox.Controls.Add(this.textBox5);
+            this.TechListGroupBox.Controls.Add(this.FieldNameInput);
             this.TechListGroupBox.Controls.Add(this.label3);
-            this.TechListGroupBox.Controls.Add(this.textBox4);
+            this.TechListGroupBox.Controls.Add(this.NameFilterInput);
             this.TechListGroupBox.Controls.Add(this.label2);
-            this.TechListGroupBox.Controls.Add(this.textBox3);
-            this.TechListGroupBox.Controls.Add(this.textBox2);
+            this.TechListGroupBox.Controls.Add(this.IDRangeMaxInput);
             this.TechListGroupBox.Controls.Add(this.label1);
-            this.TechListGroupBox.Controls.Add(this.textBox1);
+            this.TechListGroupBox.Controls.Add(this.IDRangeMinInput);
             this.TechListGroupBox.Controls.Add(this.TechListGrid);
             this.TechListGroupBox.Location = new System.Drawing.Point(12, 12);
             this.TechListGroupBox.Name = "TechListGroupBox";
@@ -162,6 +141,14 @@
             this.TechListGroupBox.TabIndex = 2;
             this.TechListGroupBox.TabStop = false;
             this.TechListGroupBox.Text = "Tech List";
+            // 
+            // CategoryComboBox
+            // 
+            this.CategoryComboBox.FormattingEnabled = true;
+            this.CategoryComboBox.Location = new System.Drawing.Point(68, 44);
+            this.CategoryComboBox.Name = "CategoryComboBox";
+            this.CategoryComboBox.Size = new System.Drawing.Size(206, 21);
+            this.CategoryComboBox.TabIndex = 13;
             // 
             // UpdateFiltersButton
             // 
@@ -192,12 +179,12 @@
             this.label4.TabIndex = 10;
             this.label4.Text = "Field name:";
             // 
-            // textBox5
+            // FieldNameInput
             // 
-            this.textBox5.Location = new System.Drawing.Point(385, 45);
-            this.textBox5.Name = "textBox5";
-            this.textBox5.Size = new System.Drawing.Size(206, 20);
-            this.textBox5.TabIndex = 9;
+            this.FieldNameInput.Location = new System.Drawing.Point(385, 45);
+            this.FieldNameInput.Name = "FieldNameInput";
+            this.FieldNameInput.Size = new System.Drawing.Size(206, 20);
+            this.FieldNameInput.TabIndex = 9;
             // 
             // label3
             // 
@@ -208,12 +195,12 @@
             this.label3.TabIndex = 8;
             this.label3.Text = "Name string match:";
             // 
-            // textBox4
+            // NameFilterInput
             // 
-            this.textBox4.Location = new System.Drawing.Point(385, 19);
-            this.textBox4.Name = "textBox4";
-            this.textBox4.Size = new System.Drawing.Size(206, 20);
-            this.textBox4.TabIndex = 7;
+            this.NameFilterInput.Location = new System.Drawing.Point(385, 19);
+            this.NameFilterInput.Name = "NameFilterInput";
+            this.NameFilterInput.Size = new System.Drawing.Size(206, 20);
+            this.NameFilterInput.TabIndex = 7;
             // 
             // label2
             // 
@@ -224,19 +211,12 @@
             this.label2.TabIndex = 6;
             this.label2.Text = "Category:";
             // 
-            // textBox3
+            // IDRangeMaxInput
             // 
-            this.textBox3.Location = new System.Drawing.Point(68, 45);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(206, 20);
-            this.textBox3.TabIndex = 5;
-            // 
-            // textBox2
-            // 
-            this.textBox2.Location = new System.Drawing.Point(174, 19);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(100, 20);
-            this.textBox2.TabIndex = 4;
+            this.IDRangeMaxInput.Location = new System.Drawing.Point(174, 19);
+            this.IDRangeMaxInput.Name = "IDRangeMaxInput";
+            this.IDRangeMaxInput.Size = new System.Drawing.Size(100, 20);
+            this.IDRangeMaxInput.TabIndex = 4;
             // 
             // label1
             // 
@@ -247,12 +227,12 @@
             this.label1.TabIndex = 3;
             this.label1.Text = "ID Range:";
             // 
-            // textBox1
+            // IDRangeMinInput
             // 
-            this.textBox1.Location = new System.Drawing.Point(68, 19);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(100, 20);
-            this.textBox1.TabIndex = 2;
+            this.IDRangeMinInput.Location = new System.Drawing.Point(68, 19);
+            this.IDRangeMinInput.Name = "IDRangeMinInput";
+            this.IDRangeMinInput.Size = new System.Drawing.Size(100, 20);
+            this.IDRangeMinInput.TabIndex = 2;
             // 
             // AddTechButton
             // 
@@ -266,6 +246,7 @@
             // 
             // DeleteTechButton
             // 
+            this.DeleteTechButton.Enabled = false;
             this.DeleteTechButton.Location = new System.Drawing.Point(671, 170);
             this.DeleteTechButton.Name = "DeleteTechButton";
             this.DeleteTechButton.Size = new System.Drawing.Size(86, 23);
@@ -276,6 +257,7 @@
             // 
             // EditTechButton
             // 
+            this.EditTechButton.Enabled = false;
             this.EditTechButton.Location = new System.Drawing.Point(671, 112);
             this.EditTechButton.Name = "EditTechButton";
             this.EditTechButton.Size = new System.Drawing.Size(86, 23);
@@ -308,6 +290,7 @@
             // 
             // AddPrereqButton
             // 
+            this.AddPrereqButton.Enabled = false;
             this.AddPrereqButton.Location = new System.Drawing.Point(671, 217);
             this.AddPrereqButton.Name = "AddPrereqButton";
             this.AddPrereqButton.Size = new System.Drawing.Size(86, 23);
@@ -318,6 +301,7 @@
             // 
             // AddGrantreqButton
             // 
+            this.AddGrantreqButton.Enabled = false;
             this.AddGrantreqButton.Location = new System.Drawing.Point(671, 246);
             this.AddGrantreqButton.Name = "AddGrantreqButton";
             this.AddGrantreqButton.Size = new System.Drawing.Size(86, 23);
@@ -328,6 +312,7 @@
             // 
             // AddPermanizesButton
             // 
+            this.AddPermanizesButton.Enabled = false;
             this.AddPermanizesButton.Location = new System.Drawing.Point(671, 275);
             this.AddPermanizesButton.Name = "AddPermanizesButton";
             this.AddPermanizesButton.Size = new System.Drawing.Size(86, 23);
@@ -338,6 +323,7 @@
             // 
             // ViewTechButton
             // 
+            this.ViewTechButton.Enabled = false;
             this.ViewTechButton.Location = new System.Drawing.Point(671, 141);
             this.ViewTechButton.Name = "ViewTechButton";
             this.ViewTechButton.Size = new System.Drawing.Size(86, 23);
@@ -345,6 +331,24 @@
             this.ViewTechButton.Text = "View Tech";
             this.ViewTechButton.UseVisualStyleBackColor = true;
             this.ViewTechButton.Click += new System.EventHandler(this.ViewTechButton_Click);
+            // 
+            // id
+            // 
+            this.id.HeaderText = "ID";
+            this.id.Name = "id";
+            this.id.ReadOnly = true;
+            // 
+            // name
+            // 
+            this.name.HeaderText = "Name";
+            this.name.Name = "name";
+            this.name.ReadOnly = true;
+            // 
+            // category
+            // 
+            this.category.HeaderText = "Category";
+            this.category.Name = "category";
+            this.category.ReadOnly = true;
             // 
             // TechListView
             // 
@@ -386,25 +390,25 @@
         private System.Windows.Forms.Button UpdateFiltersButton;
         private System.Windows.Forms.Button ClearFiltersButton;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox textBox5;
+        private System.Windows.Forms.TextBox FieldNameInput;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.TextBox NameFilterInput;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textBox3;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox IDRangeMaxInput;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox IDRangeMinInput;
         private System.Windows.Forms.Button AddTechButton;
         private System.Windows.Forms.Button DeleteTechButton;
         private System.Windows.Forms.Button EditTechButton;
-        private System.Windows.Forms.DataGridViewTextBoxColumn TechID;
-        private System.Windows.Forms.DataGridViewTextBoxColumn TechName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn TechCategory;
         private System.Windows.Forms.Button ShowTablesButton;
         private System.Windows.Forms.Button InitializeDatabaseButton;
         private System.Windows.Forms.Button AddPrereqButton;
         private System.Windows.Forms.Button AddGrantreqButton;
         private System.Windows.Forms.Button AddPermanizesButton;
         private System.Windows.Forms.Button ViewTechButton;
+        private System.Windows.Forms.ComboBox CategoryComboBox;
+        private System.Windows.Forms.DataGridViewTextBoxColumn id;
+        private System.Windows.Forms.DataGridViewTextBoxColumn name;
+        private System.Windows.Forms.DataGridViewTextBoxColumn category;
     }
 }

@@ -13,3 +13,4 @@ C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Deb
 C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.exe
 C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.pdb
 C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.TechListView.resources
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.TechEditView.resources
