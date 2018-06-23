@@ -32,6 +32,9 @@
             this.LogGroupBox = new System.Windows.Forms.GroupBox();
             this.LogDisplay = new System.Windows.Forms.TextBox();
             this.TechListGrid = new System.Windows.Forms.DataGridView();
+            this.id = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.name = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.category = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.hammertechtreedbDataSetBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.hammertechtreedbDataSet = new TechTreeEditor.hammertechtreedbDataSet();
             this.TechListGroupBox = new System.Windows.Forms.GroupBox();
@@ -55,9 +58,6 @@
             this.AddGrantreqButton = new System.Windows.Forms.Button();
             this.AddPermanizesButton = new System.Windows.Forms.Button();
             this.ViewTechButton = new System.Windows.Forms.Button();
-            this.id = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.name = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.category = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.LogGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TechListGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.hammertechtreedbDataSetBindingSource)).BeginInit();
@@ -113,6 +113,24 @@
             this.TechListGrid.Size = new System.Drawing.Size(641, 285);
             this.TechListGrid.TabIndex = 1;
             this.TechListGrid.SelectionChanged += new System.EventHandler(this.TechListGrid_SelectionChanged);
+            // 
+            // id
+            // 
+            this.id.HeaderText = "ID";
+            this.id.Name = "id";
+            this.id.ReadOnly = true;
+            // 
+            // name
+            // 
+            this.name.HeaderText = "Name";
+            this.name.Name = "name";
+            this.name.ReadOnly = true;
+            // 
+            // category
+            // 
+            this.category.HeaderText = "Category";
+            this.category.Name = "category";
+            this.category.ReadOnly = true;
             // 
             // hammertechtreedbDataSet
             // 
@@ -331,24 +349,6 @@
             this.ViewTechButton.Text = "View Tech";
             this.ViewTechButton.UseVisualStyleBackColor = true;
             this.ViewTechButton.Click += new System.EventHandler(this.ViewTechButton_Click);
-            // 
-            // id
-            // 
-            this.id.HeaderText = "ID";
-            this.id.Name = "id";
-            this.id.ReadOnly = true;
-            // 
-            // name
-            // 
-            this.name.HeaderText = "Name";
-            this.name.Name = "name";
-            this.name.ReadOnly = true;
-            // 
-            // category
-            // 
-            this.category.HeaderText = "Category";
-            this.category.Name = "category";
-            this.category.ReadOnly = true;
             // 
             // TechListView
             // 

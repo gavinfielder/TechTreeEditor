@@ -63,6 +63,7 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.RevertBehaviorDisplay = new System.Windows.Forms.Label();
             this.AlwaysViewSelectedCheckBox = new System.Windows.Forms.CheckBox();
+            this.PermanizesSelfButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.OtherInformationGroupBox.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -241,9 +242,9 @@
             // 
             // RemovePermanizesButton
             // 
-            this.RemovePermanizesButton.Location = new System.Drawing.Point(231, 281);
+            this.RemovePermanizesButton.Location = new System.Drawing.Point(231, 286);
             this.RemovePermanizesButton.Name = "RemovePermanizesButton";
-            this.RemovePermanizesButton.Size = new System.Drawing.Size(55, 29);
+            this.RemovePermanizesButton.Size = new System.Drawing.Size(55, 24);
             this.RemovePermanizesButton.TabIndex = 20;
             this.RemovePermanizesButton.Text = "Remove";
             this.RemovePermanizesButton.UseVisualStyleBackColor = true;
@@ -326,6 +327,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.PermanizesSelfButton);
             this.groupBox1.Controls.Add(this.PrereqsListBox);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.label3);
@@ -418,6 +420,16 @@
             this.AlwaysViewSelectedCheckBox.Visible = false;
             this.AlwaysViewSelectedCheckBox.CheckedChanged += new System.EventHandler(this.AlwaysViewSelectedCheckBox_CheckedChanged);
             // 
+            // PermanizesSelfButton
+            // 
+            this.PermanizesSelfButton.Location = new System.Drawing.Point(231, 260);
+            this.PermanizesSelfButton.Name = "PermanizesSelfButton";
+            this.PermanizesSelfButton.Size = new System.Drawing.Size(55, 24);
+            this.PermanizesSelfButton.TabIndex = 21;
+            this.PermanizesSelfButton.Text = "Add Self";
+            this.PermanizesSelfButton.UseVisualStyleBackColor = true;
+            this.PermanizesSelfButton.Click += new System.EventHandler(this.PermanizesSelfButton_Click);
+            // 
             // TechEditView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -435,6 +447,7 @@
             this.Name = "TechEditView";
             this.Text = "View / Edit Tech";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TechEditView_FormClosing);
+            this.Enter += new System.EventHandler(this.TechEditView_Enter);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.OtherInformationGroupBox.ResumeLayout(false);
@@ -483,5 +496,6 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Label RevertBehaviorDisplay;
         private System.Windows.Forms.CheckBox AlwaysViewSelectedCheckBox;
+        private System.Windows.Forms.Button PermanizesSelfButton;
     }
 }

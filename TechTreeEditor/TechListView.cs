@@ -18,6 +18,7 @@ namespace TechTreeEditor
         private MySqlConnection connection;
         private List<TechEditView> openEditViews;
         private int nextEditViewID = 0;
+        public int lastFocusViewID = -1;
         private struct FilterOptions
         {
             public bool idRangeActive, categoryActive, nameStringMatchActive, fieldNameActive;
@@ -78,6 +79,7 @@ namespace TechTreeEditor
                 openEditViews.RemoveAt(i);
                 //TechEditView handles closing and disposing the form
             }
+            lastFocusViewID = -1;
         }
 
         //Event Handlers
@@ -142,7 +144,15 @@ namespace TechTreeEditor
         }
         private void AddPrereqButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            //Find an open TechEditView with the most recent focus
+            int i = 0;
+            while (i < openEditViews.Count && i != openEditViews[i].EditViewID) i++;
+            if (i < openEditViews.Count)
+            {
+                //Found. Add the prereq
+                openEditViews[i].AddPrereq(
+                    HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+            }
         }
         private void AddGrantreqButton_Click(object sender, EventArgs e)
         {

@@ -14,15 +14,17 @@ namespace TechTreeEditor
 {
     public partial class TechEditView : Form
     {
+        //*********************************************************************
+        //*************************** Data Structures *************************
+        //*********************************************************************
         public enum ViewMode
         {
             ADDING_NEW,
             EDITING,
             READ_ONLY
         };
-        //Fields
-        private ViewMode viewMode_internal; //Do not use outside of below property
-        public ViewMode Mode {
+        public ViewMode Mode
+        {
             get
             {
                 return viewMode_internal;
@@ -78,11 +80,14 @@ namespace TechTreeEditor
                 UpdateTitleBar();
             }
         }
-        private MySqlConnection connection;
-        public TechListView techListView; //set by TechListView
-        private Regex IDRgx;
-        private Regex alphaRgx;
+        public TechListView techListView; //reference set by TechListView
         public int EditViewID { get; }
+        
+        private ViewMode viewMode_internal; //Do not use (outside of Mode property)
+        private MySqlConnection connection;
+        private Regex IDRgx; //matches if invalid hex string
+        private Regex alphaRgx; //matches if any special characters
+
         //Data
         private class TechDataContainer
         {
@@ -102,9 +107,10 @@ namespace TechTreeEditor
             public List<uint> techPrereqs = new List<uint>();
             public bool techPrereqsChanged = false;
             public List<uint> techGrantreqs = new List<uint>();
-            public bool techhGrantreqsChanged = false;
+            public bool techGrantreqsChanged = false;
             public List<uint> techPermanizes = new List<uint>();
             public bool techPermanizesChanged = false;
+            public bool techPermanizesSelf = false;
 
             //Sets all the fields to changed
             public void SetAllChanged(bool changed)
@@ -116,7 +122,7 @@ namespace TechTreeEditor
                 techCategoryChanged = changed;
                 techFieldNameChanged = changed;
                 techPrereqsChanged = changed;
-                techhGrantreqsChanged = changed;
+                techGrantreqsChanged = changed;
                 techPermanizesChanged = changed;
             }
 
@@ -126,7 +132,7 @@ namespace TechTreeEditor
                 return (techIDChanged || techCostPerDayChanged ||
                     techNumberDaysChanged || techNameChanged ||
                     techCategoryChanged || techFieldNameChanged ||
-                    techPrereqsChanged || techhGrantreqsChanged ||
+                    techPrereqsChanged || techGrantreqsChanged ||
                     techPermanizesChanged);
             }
 
@@ -145,6 +151,7 @@ namespace TechTreeEditor
                 techCategoryChanged = other.techCategoryChanged;
                 techFieldName = other.techFieldName;
                 techFieldNameChanged = other.techFieldNameChanged;
+                techPermanizesSelf = other.techPermanizesSelf;
                 techPrereqs.Clear();
                 techGrantreqs.Clear();
                 techPermanizes.Clear();
@@ -153,8 +160,80 @@ namespace TechTreeEditor
                 foreach (uint n in other.techPermanizes) techPermanizes.Add(n);
             }
 
+            //Sets changed flag for prereq collection
+            public void CheckPrereqsChanged(TechDataContainer orig)
+            {
+                techPrereqsChanged = false;
+                if (techPrereqs.Count != orig.techPrereqs.Count)
+                {
+                    techPrereqsChanged = true;
+                    return;
+                }
+                if (techPrereqs.Count == 0)
+                {
+                    return; // keep as false
+                }
+                foreach (uint n in orig.techPrereqs)
+                {
+                    if (!(techPrereqs.Contains(n)))
+                    {
+                        techPrereqsChanged = true;
+                        return;
+                    }
+                }
+            }
+
+            //Sets changed flag for grantreq collection
+            public void CheckGrantreqsChanged(TechDataContainer orig)
+            {
+                techGrantreqsChanged = false;
+                if (techGrantreqs.Count != orig.techGrantreqs.Count)
+                {
+                    techGrantreqsChanged = true;
+                    return;
+                }
+                if (techGrantreqs.Count == 0)
+                {
+                    return; // keep as false
+                }
+                foreach (uint n in orig.techGrantreqs)
+                {
+                    if (!(techGrantreqs.Contains(n)))
+                    {
+                        techGrantreqsChanged = true;
+                        return;
+                    }
+                }
+            }
+
+            //Sets changed flag for permanizes collection
+            public void CheckPermanizesChanged(TechDataContainer orig)
+            {
+                techPermanizesChanged = false;
+                if (techPermanizes.Count != orig.techPermanizes.Count)
+                {
+                    techPermanizesChanged = true;
+                    return;
+                }
+                if (techPermanizes.Count == 0)
+                {
+                    return; // keep as false
+                }
+                foreach (uint n in orig.techPermanizes)
+                {
+                    if (!(techPermanizes.Contains(n)))
+                    {
+                        techPermanizesChanged = true;
+                        return;
+                    }
+                }
+            }
         }
         private TechDataContainer current, original;
+
+        //*********************************************************************
+        //**************************** Basic Methods **************************
+        //*********************************************************************
 
         //Constructor
         public TechEditView(int viewID, uint id = 0, ViewMode mode = ViewMode.ADDING_NEW)
@@ -192,12 +271,89 @@ namespace TechTreeEditor
                     HexConverter.IntToHex(original.techID) + ")";
         }
 
+        //Adds a prereq. Called by TechListView when user clicks add prereq
+        public void AddPrereq(uint id)
+        {
+            //Not allowed in read only mode
+            if (Mode == ViewMode.READ_ONLY) return;
+            if (id == current.techID)
+            {
+                MessageBox.Show("A tech may not be a prerequisite for itself.");
+                return;
+            }
+            current.techPrereqs.Add(id);
+            current.CheckPrereqsChanged(original);
+            FetchPrereqs();
+        }
+        //Adds a grantreq. Called by TechListView when user clicks add prereq
+        public void AddGrantreq(uint id)
+        {
+            //Not allowed in read only mode
+            if (Mode == ViewMode.READ_ONLY) return; if (id == current.techID)
+            {
+                MessageBox.Show("A tech may not be a grantrequisite for itself.");
+                return;
+            }
+            current.techGrantreqs.Add(id);
+            current.CheckGrantreqsChanged(original);
+            FetchGrantreqs();
+        }
+        //Adds a permanizes. Called by TechListView when user clicks add prereq
+        public void AddPermanizes(uint id)
+        {
+            //Not allowed in read only mode
+            if (Mode == ViewMode.READ_ONLY) return;
+            current.techPermanizes.Add(id);
+            current.CheckPermanizesChanged(original);
+            FetchPermanizes();
+        }
+
+        //Validates the form data. Informs user of problems
+        private bool ValidateForm()
+        {
+            //ID self validates
+            //Validate cost per day
+            if (current.techCostPerDay < 0)
+            {
+                MessageBox.Show("Cost per day cannot be negative");
+                return false;
+            }
+            //validate number days
+            if (current.techNumberDays < 0)
+            {
+                MessageBox.Show("Number days cannot be negative");
+                return false;
+            }
+            //Validate name
+            if (current.techName == "")
+            {
+                MessageBox.Show("Name cannot be null.");
+                return false;
+            }
+            else if (alphaRgx.IsMatch(current.techName))
+            {
+                MessageBox.Show("Name can have only letters, numbers, and spaces.");
+                return false;
+            }
+            //Validate category
+            if (current.techCategory == "")
+            {
+                MessageBox.Show("Category cannot be null.");
+                return false;
+            }
+            //All validated
+            return true;
+        }
+
+        //*********************************************************************
+        //************************** Database Tasks ***************************
+        //*********************************************************************
+
         //Loads a tech from database and populates the fields
         public void ViewTech(uint id)
         {
             //TODO
         }
-
         //Updates an existing record with the updated information
         private void EditTech(uint id)
         {
@@ -205,7 +361,6 @@ namespace TechTreeEditor
             if (Mode != ViewMode.EDITING) return; 
             //TODO
         }
-
         //Adds a new tech
         private void AddTech()
         {
@@ -217,25 +372,28 @@ namespace TechTreeEditor
             //Insert the tech
             InsertCurrentTech();
             //Insert new tech prerequisites
-            //TODO
+            InsertPrereqs();
             //Insert new tech grantrequisites
             //TODO
             //Insert new tech permanizes
             //TODO
             //Once done, change mode to edit and set the original to the new record
             Mode = ViewMode.EDITING;
+            current.SetAllChanged(false);
             original.Copy(current);
             UpdateTitleBar();
         }
-
-        //Database functions
+        
+        //*********************************************************************
+        //************************ Database Functions *************************
+        //*********************************************************************
 
         //Inserts current as a new record into tech table
         private void InsertCurrentTech()
         {
             MySqlCommand command = new MySqlCommand();
             command.Connection = connection;
-            command.CommandText = "INSERT tech " +
+            command.CommandText = "INSERT INTO tech " +
                 "VALUES(" + current.techID + ",'" + current.techName + "','" +
                 current.techCategory + "','" + current.techFieldName + "'," +
                 current.techCostPerDay + "," + current.techNumberDays + ");";
@@ -281,45 +439,92 @@ namespace TechTreeEditor
                 connection.Close();
             }
         }
-
-        //Validates the form data
-        private bool ValidateForm()
+        //Populates the Prereqs list box
+        private void FetchPrereqs()
         {
-            //ID self validates
-            //Validate cost per day
-            if (current.techCostPerDay < 0)
+            PrereqsListBox.Items.Clear();
+            if (current.techPrereqs.Count == 0) return;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT id, name FROM tech " +
+                "WHERE ";
+            int numberOfTechs = 0;
+            foreach (uint id in current.techPrereqs)
             {
-                MessageBox.Show("Cost per day cannot be negative");
-                return false;
+                if (numberOfTechs > 0) command.CommandText += "OR ";
+                command.CommandText += "id=" + id + " ";
+                numberOfTechs++;
             }
-            //validate number days
-            if (current.techNumberDays < 0)
+            string nameInput;
+            uint idInput;
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            try
             {
-                MessageBox.Show("Number days cannot be negative");
-                return false;
+                while (reader.Read())
+                {
+                    idInput = reader.GetUInt32(0);
+                    nameInput = reader.GetString(1);
+                    PrereqsListBox.Items.Add(
+                        HexConverter.IntToHex(idInput) + ": " + nameInput);
+                }
             }
-            //Validate name
-            if (current.techName == "")
+            catch (MySqlException ex)
             {
-                MessageBox.Show("Name cannot be null.");
-                return false;
+                techListView.Log("An error occurred: " + ex.Message);
             }
-            else if (alphaRgx.IsMatch(current.techName))
+            finally
             {
-                MessageBox.Show("Name can have only letters, numbers, and spaces.");
-                return false;
+                connection.Close();
             }
-            //Validate category
-            if (current.techCategory == "")
-            {
-                MessageBox.Show("Category cannot be null.");
-                return false;
-            }
-            //All validated
-            return true;
         }
-    
-        //Event handlers
+        //Populates the Grantreqs list box
+        private void FetchGrantreqs()
+        {
+            //TODO
+        }
+        //Populates the Permanizes list box
+        private void FetchPermanizes()
+        {
+            //TODO
+        }
+        //Inserts all prereqs as new prereq relationships
+        private void InsertPrereqs()
+        {
+            if (current.techPrereqs.Count == 0) return;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "INSERT INTO tech_prereqs VALUES";
+            int numberOfPrereqs = 0;
+            foreach (uint id in current.techPrereqs)
+            {
+                if (numberOfPrereqs > 0) command.CommandText += ",";
+                command.CommandText += "(" + current.techID + "," + id + ")";
+                numberOfPrereqs++;
+            }
+            command.CommandText += ";";
+            try
+            {
+                connection.Open();
+                techListView.Log("Inserting into tech_prereqs with command = \"" +
+                    command.CommandText + "\"");
+                command.ExecuteNonQuery();
+
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+
+
+        //*********************************************************************
+        //************************** Event Handlers ***************************
+        //*********************************************************************
         private void IDInput_TextChanged(object sender, EventArgs e)
         {
             //Validate valid hex. If not hex, remove all non-hex characters
@@ -439,6 +644,15 @@ namespace TechTreeEditor
                 techListView.CloseEditView(EditViewID);
                 //Now the form closes and disposes itself
             }
+        }
+        private void TechEditView_Enter(object sender, EventArgs e)
+        {
+            //Records the most active tech edit view focus so the list view knows where to send calls
+            techListView.lastFocusViewID = EditViewID;
+        }
+        private void PermanizesSelfButton_Click(object sender, EventArgs e)
+        {
+            //TODO
         }
         private void AlwaysViewSelectedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
