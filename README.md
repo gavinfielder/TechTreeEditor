@@ -12,6 +12,7 @@ This is a game development tool I'm developing for an RTS project I'm working on
 ## Future Plans
 
  - Can visualize local graph of a selected tech: its prerequisites, what techs it is a prerequisite for, and possibly grantrequisite connections as well.
+ - Can calculate the total cost and research time of a tech including all of its prerequisites up to root techs.
 
 
 
