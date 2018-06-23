@@ -1,7 +1,7 @@
 # TechTreeEditor
 
 
-This is a game development tool I'm developing for an RTS project I'm working on. It uses SQL to develop and maintain tech tree.
+This is a game development tool I'm developing for an RTS project I'm working on. It uses SQL to develop and maintain a tech tree.
 
 ## Features
 
@@ -9,6 +9,12 @@ This is a game development tool I'm developing for an RTS project I'm working on
  - Techs are connected to other techs through prerequisites
  - Techs can also be connected by "grantrequisite" and "permanizes" relationships, which are specific features of the game I'm designing.
 
+## Future Plans
+
+ - Can visualize local graph of a selected tech: its prerequisites, what techs it is a prerequisite for, and possibly grantrequisite connections as well.
+
+
+
 WIP
 
-Last updated 6/20/2018
+Readme last updated 6/23/2018
