@@ -287,7 +287,7 @@ namespace TechTreeEditor
             }
             current.techPrereqs.Add(id);
             current.CheckPrereqsChanged(original);
-            FetchPrereqs();
+            PopulatePrereqs();
         }
         //Adds a grantreq. Called by TechListView when user clicks add prereq
         public void AddGrantreq(uint id)
@@ -300,7 +300,7 @@ namespace TechTreeEditor
             }
             current.techGrantreqs.Add(id);
             current.CheckGrantreqsChanged(original);
-            FetchGrantreqs();
+            PopulateGrantreqs();
         }
         //Adds a permanizes. Called by TechListView when user clicks add prereq
         public void AddPermanizes(uint id)
@@ -309,7 +309,30 @@ namespace TechTreeEditor
             if (Mode == ViewMode.READ_ONLY) return;
             current.techPermanizes.Add(id);
             current.CheckPermanizesChanged(original);
-            FetchPermanizes();
+            PopulatePermanizes();
+        }
+        //Populates the fields with the provided data set
+        public void DisplayCurrent()
+        {
+            IDInput.Text = HexConverter.IntToHex(current.techID);
+            NameInput.Text = current.techName;
+            int i = 0;
+            while (CategoryComboBox.Items[i] 
+                as string != current.techCategory) i++;
+            CategoryComboBox.SelectedIndex = i;
+            FieldNameInput.Text = current.techFieldName;
+            CostPerDayInput.Text = current.techCostPerDay.ToString();
+            NumberDaysInput.Text = current.techNumberDays.ToString();
+            PopulatePrereqs();
+            PopulateGrantreqs();
+            PopulatePermanizes();
+        }
+        //Reverts the form to the original data
+        public void Revert()
+        {
+            current.Copy(original);
+            current.SetAllChanged(false);
+            DisplayCurrent();
         }
 
         //Validates the form data. Informs user of problems
@@ -356,7 +379,27 @@ namespace TechTreeEditor
         //Loads a tech from database and populates the fields
         public void ViewTech(uint id)
         {
-            //TODO
+            TechDataContainer input = new TechDataContainer();
+            input.SetAllChanged(false);
+            input.techIDChanged = FetchTech(id, ref input);
+            input.techPrereqsChanged = FetchPrereqs(id, ref input);
+            input.techGrantreqsChanged = FetchGrantreqs(id, ref input);
+            //input.techPermanizesChanged = FetchPermanizes(id, ref input);
+            input.techPermanizesChanged = true; //TODO: remove when implemented
+            if (input.techIDChanged && input.techPrereqsChanged &&
+                input.techGrantreqsChanged && input.techPermanizesChanged)
+            {
+                //success
+                current.Copy(input);
+                original.Copy(input);
+                current.SetAllChanged(false);
+                DisplayCurrent();
+            }
+            else
+            {
+                //failure
+                techListView.Log("ViewTech failed.");
+            }
         }
         //Updates an existing record with the updated information
         private void EditTech(uint id)
@@ -441,8 +484,134 @@ namespace TechTreeEditor
                 connection.Close();
             }
         }
+        //Fetches basic tech data and puts it in the data container. Returns true if successful
+        private bool FetchTech(uint id, ref TechDataContainer data)
+        {
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT * FROM tech WHERE id=" + id + ";";
+            connection.Open();
+            MySqlDataReader reader;
+            bool success = true;
+            try
+            {
+                reader = command.ExecuteReader();
+                if (reader.Read())
+                {
+                    data.techID = reader.GetUInt32(0);
+                    data.techName = reader.GetString(1);
+                    data.techCategory = reader.GetString(2);
+                    data.techFieldName = reader.GetString(3);
+                    data.techCostPerDay = reader.GetFloat(4);
+                    data.techNumberDays = reader.GetFloat(5);
+                    success = true;
+                }
+                else
+                {
+                    techListView.Log("Tech not found: " + HexConverter.IntToHex(id));
+                    success = false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Fetches prerequisites for the tech and puts it in the data container. Returns true if successful
+        private bool FetchPrereqs(uint id, ref TechDataContainer data)
+        {
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT prereq_id " +
+                "FROM tech_prereqs WHERE id=" + id + ";";
+            MySqlDataReader reader;
+            connection.Open();
+            bool success = true;
+            try
+            {
+                reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    data.techPrereqs.Add(reader.GetUInt32(0));
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Fetches grantrequisites for the tech and puts it in the data container. Returns true if successful
+        private bool FetchGrantreqs(uint id, ref TechDataContainer data)
+        {
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT grantreq_id " +
+                "FROM tech_grantreqs WHERE id=" + id + ";";
+            MySqlDataReader reader;
+            connection.Open();
+            bool success = true;
+            try
+            {
+                reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    data.techGrantreqs.Add(reader.GetUInt32(0));
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Fetches permanizes relationships for the tech and puts it in the data container. Returns true if successful
+        private bool FetchPermanizes(uint id, ref TechDataContainer data)
+        {
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT permanizes_id " +
+                "FROM tech_permanizes WHERE id=" + id + ";";
+            MySqlDataReader reader;
+            connection.Open();
+            bool success = true;
+            try
+            {
+                reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    data.techPermanizes.Add(reader.GetUInt32(0));
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
         //Populates the Prereqs list box
-        private void FetchPrereqs()
+        private void PopulatePrereqs()
         {
             PrereqsListBox.Items.Clear();
             if (current.techPrereqs.Count == 0) return;
@@ -481,7 +650,7 @@ namespace TechTreeEditor
             }
         }
         //Populates the Grantreqs list box
-        private void FetchGrantreqs()
+        private void PopulateGrantreqs()
         {
             GrantreqsListBox.Items.Clear();
             if (current.techGrantreqs.Count == 0) return;
@@ -520,7 +689,7 @@ namespace TechTreeEditor
             }
         }
         //Populates the Permanizes list box
-        private void FetchPermanizes()
+        private void PopulatePermanizes()
         {
             //TODO
         }

@@ -46,6 +46,17 @@ namespace TechTreeEditor
             }
         }
 
+        //Returns the currently selected id, or 0 if none selected
+        public uint SelectedTechID
+        {
+            get
+            {
+                if (TechListGrid.SelectedRows.Count == 0) return 0;
+                return HexConverter.HexToInt(
+                    TechListGrid.SelectedRows[0].Cells[0].Value as string);
+            }
+        }
+
         //*********************************************************************
         //*************************** Basic Methods ***************************
         //*********************************************************************
@@ -188,7 +199,7 @@ namespace TechTreeEditor
         }
         private void ViewTechButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            OpenEditView(TechEditView.ViewMode.READ_ONLY, SelectedTechID);
         }
         private void AddPrereqButton_Click(object sender, EventArgs e)
         {
@@ -207,8 +218,7 @@ namespace TechTreeEditor
                         break;
                     }
                 }
-                openEditViews[viewIndex].AddPrereq(
-                    HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+                openEditViews[viewIndex].AddPrereq(SelectedTechID);
                 openEditViews[viewIndex].Activate();
             }
             else
@@ -218,8 +228,7 @@ namespace TechTreeEditor
                 selector.ShowDialog(this);
                 if (selector.SelectedViewIndex != -1)
                 {
-                    openEditViews[selector.SelectedViewIndex].AddPrereq(
-                        HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+                    openEditViews[selector.SelectedViewIndex].AddPrereq(SelectedTechID);
                     openEditViews[selector.SelectedViewIndex].Activate();
                 }
                 selector.Dispose();
@@ -242,8 +251,7 @@ namespace TechTreeEditor
                         break;
                     }
                 }
-                openEditViews[viewIndex].AddGrantreq(
-                    HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+                openEditViews[viewIndex].AddGrantreq(SelectedTechID);
                 openEditViews[viewIndex].Activate();
             }
             else
@@ -253,8 +261,7 @@ namespace TechTreeEditor
                 selector.ShowDialog(this);
                 if (selector.SelectedViewIndex != -1)
                 {
-                    openEditViews[selector.SelectedViewIndex].AddGrantreq(
-                        HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+                    openEditViews[selector.SelectedViewIndex].AddGrantreq(SelectedTechID);
                     openEditViews[selector.SelectedViewIndex].Activate();
                 }
                 selector.Dispose();
@@ -523,8 +530,6 @@ namespace TechTreeEditor
             }
             command.CommandText +=  "ORDER BY id ASC;";
             uint rowsFetched = 0;
-            Log("Fetching data with command = \"" + command.CommandText + "\"");
-
             try
             {
                 connection.Open();
