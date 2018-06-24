@@ -106,6 +106,7 @@
             this.name,
             this.category});
             this.TechListGrid.Location = new System.Drawing.Point(6, 71);
+            this.TechListGrid.MultiSelect = false;
             this.TechListGrid.Name = "TechListGrid";
             this.TechListGrid.ReadOnly = true;
             this.TechListGrid.RowHeadersVisible = false;

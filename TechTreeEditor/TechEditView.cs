@@ -271,6 +271,10 @@ namespace TechTreeEditor
                     HexConverter.IntToHex(original.techID) + ")";
         }
 
+        //*********************************************************************
+        //***************************** Form Tasks ****************************
+        //*********************************************************************
+
         //Adds a prereq. Called by TechListView when user clicks add prereq
         public void AddPrereq(uint id)
         {
@@ -374,7 +378,7 @@ namespace TechTreeEditor
             //Insert new tech prerequisites
             InsertPrereqs();
             //Insert new tech grantrequisites
-            //TODO
+            InsertGrantreqs();
             //Insert new tech permanizes
             //TODO
             //Once done, change mode to edit and set the original to the new record
@@ -397,7 +401,6 @@ namespace TechTreeEditor
                 "VALUES(" + current.techID + ",'" + current.techName + "','" +
                 current.techCategory + "','" + current.techFieldName + "'," +
                 current.techCostPerDay + "," + current.techNumberDays + ");";
-            techListView.Log("Inserting tech with command: \"" + command.CommandText); 
             try
             {
                 connection.Open();
@@ -407,11 +410,10 @@ namespace TechTreeEditor
             catch (MySqlException ex)
             {
                 techListView.Log("An error occurred: " + ex.Message);
-                MessageBox.Show("An error occurred: " + ex.Message);
             }
             finally
             {
-                techListView.Log("Closing connection.");
+                techListView.Log("Tech inserted: " + current.techName);
                 connection.Close();
             }
         }
@@ -481,7 +483,41 @@ namespace TechTreeEditor
         //Populates the Grantreqs list box
         private void FetchGrantreqs()
         {
-            //TODO
+            GrantreqsListBox.Items.Clear();
+            if (current.techGrantreqs.Count == 0) return;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT id, name FROM tech " +
+                "WHERE ";
+            int numberOfTechs = 0;
+            foreach (uint id in current.techGrantreqs)
+            {
+                if (numberOfTechs > 0) command.CommandText += "OR ";
+                command.CommandText += "id=" + id + " ";
+                numberOfTechs++;
+            }
+            string nameInput;
+            uint idInput;
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            try
+            {
+                while (reader.Read())
+                {
+                    idInput = reader.GetUInt32(0);
+                    nameInput = reader.GetString(1);
+                    GrantreqsListBox.Items.Add(
+                        HexConverter.IntToHex(idInput) + ": " + nameInput);
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
         }
         //Populates the Permanizes list box
         private void FetchPermanizes()
@@ -506,8 +542,8 @@ namespace TechTreeEditor
             try
             {
                 connection.Open();
-                techListView.Log("Inserting into tech_prereqs with command = \"" +
-                    command.CommandText + "\"");
+                //techListView.Log("Inserting into tech_prereqs with command = \"" +
+                    //command.CommandText + "\"");
                 command.ExecuteNonQuery();
 
             }
@@ -518,9 +554,42 @@ namespace TechTreeEditor
             finally
             {
                 connection.Close();
+                techListView.Log(numberOfPrereqs + " prerequisites inserted.");
             }
         }
+        //Inserts all grantreqs as new grantreq relationships
+        private void InsertGrantreqs()
+        {
+            if (current.techGrantreqs.Count == 0) return;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "INSERT INTO tech_grantreqs VALUES";
+            int numberOfGrantreqs = 0;
+            foreach (uint id in current.techGrantreqs)
+            {
+                if (numberOfGrantreqs > 0) command.CommandText += ",";
+                command.CommandText += "(" + current.techID + "," + id + ")";
+                numberOfGrantreqs++;
+            }
+            command.CommandText += ";";
+            try
+            {
+                connection.Open();
+                //techListView.Log("Inserting " + numberOfGrantreqs + " records into tech_grantreqs with command = \"" +
+                    //command.CommandText + "\"");
+                command.ExecuteNonQuery();
 
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+                techListView.Log(numberOfGrantreqs + " grantrequisites inserted.");
+            }
+        }
 
         //*********************************************************************
         //************************** Event Handlers ***************************
@@ -644,11 +713,6 @@ namespace TechTreeEditor
                 techListView.CloseEditView(EditViewID);
                 //Now the form closes and disposes itself
             }
-        }
-        private void TechEditView_Enter(object sender, EventArgs e)
-        {
-            //Records the most active tech edit view focus so the list view knows where to send calls
-            techListView.lastFocusViewID = EditViewID;
         }
         private void PermanizesSelfButton_Click(object sender, EventArgs e)
         {

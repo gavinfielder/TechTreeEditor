@@ -14,11 +14,12 @@ namespace TechTreeEditor
 {
     public partial class TechListView : Form
     {
-        //Fields
+        //*********************************************************************
+        //************************** Data Structures **************************
+        //*********************************************************************
         private MySqlConnection connection;
         private List<TechEditView> openEditViews;
         private int nextEditViewID = 0;
-        public int lastFocusViewID = -1;
         private struct FilterOptions
         {
             public bool idRangeActive, categoryActive, nameStringMatchActive, fieldNameActive;
@@ -27,7 +28,27 @@ namespace TechTreeEditor
             public string nameString;
             public string fieldName;
         }
-        FilterOptions currentFilters;
+        private FilterOptions currentFilters;
+
+        //Returns the number of open tech edit views that are in Edit or Add mode
+        public int NumberOfOpenEditingViews
+        {
+            get
+            {
+                int num = 0;
+                for (int i = 0; i < openEditViews.Count; i++)
+                {
+                    if (openEditViews[i].Mode == TechEditView.ViewMode.EDITING ||
+                        openEditViews[i].Mode == TechEditView.ViewMode.ADDING_NEW)
+                        num++;
+                }
+                return num;
+            }
+        }
+
+        //*********************************************************************
+        //*************************** Basic Methods ***************************
+        //*********************************************************************
 
         //Constructor and Destructor
         public TechListView()
@@ -61,6 +82,16 @@ namespace TechTreeEditor
             }
         }
 
+        //Adds a message to the log
+        public void Log(string message)
+        {
+            LogDisplay.AppendText(message + "\r\n");
+        }
+
+        //*********************************************************************
+        //************************** Form Operations **************************
+        //*********************************************************************
+
         //Open or closes a new tech edit view
         private void OpenEditView(TechEditView.ViewMode mode, uint id = 0)
         {
@@ -68,6 +99,10 @@ namespace TechTreeEditor
             nextEditViewID++;
             openEditViews[openEditViews.Count - 1].techListView = this;
             openEditViews[openEditViews.Count - 1].Visible = true;
+            int offset = (openEditViews.Count - 1) * 30;
+            openEditViews[openEditViews.Count - 1].Left = this.Left + this.Width + offset;
+            openEditViews[openEditViews.Count - 1].Top = this.Top + offset;
+            openEditViews[openEditViews.Count - 1].Activate();
         }
         public void CloseEditView(int viewID)
         {
@@ -79,10 +114,23 @@ namespace TechTreeEditor
                 openEditViews.RemoveAt(i);
                 //TechEditView handles closing and disposing the form
             }
-            lastFocusViewID = -1;
         }
 
-        //Event Handlers
+        //Adds the requested prereq to the requested form
+        public void AddPrereqToEditForm(int viewIndex, uint id)
+        {
+            openEditViews[viewIndex].AddPrereq(id);
+        }
+        //Adds the requested grantreq to the requested form
+        public void AddGrantreqToEditForm(int viewIndex, uint id)
+        {
+            openEditViews[viewIndex].AddGrantreq(id);
+        }
+
+        //*********************************************************************
+        //************************** Event Handlers ***************************
+        //*********************************************************************
+
         private void InitializeDatabaseButton_Click(object sender, EventArgs e)
         {
             //Initializes the database
@@ -144,19 +192,73 @@ namespace TechTreeEditor
         }
         private void AddPrereqButton_Click(object sender, EventArgs e)
         {
-            //Find an open TechEditView with the most recent focus
-            int i = 0;
-            while (i < openEditViews.Count && i != openEditViews[i].EditViewID) i++;
-            if (i < openEditViews.Count)
+            int views = NumberOfOpenEditingViews;
+            if (views == 0) return;
+            if (views == 1)
             {
-                //Found. Add the prereq
-                openEditViews[i].AddPrereq(
+                int viewIndex = -1;
+                //Find the view that's in add or edit mode
+                for (int j = 0; j < openEditViews.Count; j++)
+                {
+                    if (openEditViews[j].Mode == TechEditView.ViewMode.ADDING_NEW ||
+                        openEditViews[j].Mode == TechEditView.ViewMode.EDITING)
+                    {
+                        viewIndex = j;
+                        break;
+                    }
+                }
+                openEditViews[viewIndex].AddPrereq(
                     HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+                openEditViews[viewIndex].Activate();
+            }
+            else
+            {
+                //Multiple editing views are open. Pass to the editing form selector dialog
+                EditViewSelector selector = new EditViewSelector(ref openEditViews);
+                selector.ShowDialog(this);
+                if (selector.SelectedViewIndex != -1)
+                {
+                    openEditViews[selector.SelectedViewIndex].AddPrereq(
+                        HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+                    openEditViews[selector.SelectedViewIndex].Activate();
+                }
+                selector.Dispose();
             }
         }
         private void AddGrantreqButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            int views = NumberOfOpenEditingViews;
+            if (views == 0) return;
+            if (views == 1)
+            {
+                int viewIndex = -1;
+                //Find the view that's in add or edit mode
+                for (int j = 0; j < openEditViews.Count; j++)
+                {
+                    if (openEditViews[j].Mode == TechEditView.ViewMode.ADDING_NEW ||
+                        openEditViews[j].Mode == TechEditView.ViewMode.EDITING)
+                    {
+                        viewIndex = j;
+                        break;
+                    }
+                }
+                openEditViews[viewIndex].AddGrantreq(
+                    HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+                openEditViews[viewIndex].Activate();
+            }
+            else
+            {
+                //Multiple editing views are open. Pass to the editing form selector dialog
+                EditViewSelector selector = new EditViewSelector(ref openEditViews);
+                selector.ShowDialog(this);
+                if (selector.SelectedViewIndex != -1)
+                {
+                    openEditViews[selector.SelectedViewIndex].AddGrantreq(
+                        HexConverter.HexToInt(TechListGrid.SelectedRows[0].Cells[0].Value as string));
+                    openEditViews[selector.SelectedViewIndex].Activate();
+                }
+                selector.Dispose();
+            }
         }
         private void AddPermanizesButton_Click(object sender, EventArgs e)
         {
@@ -187,13 +289,12 @@ namespace TechTreeEditor
 
             }
         }
-        //Log management
-        public void Log(string message)
-        {
-            LogDisplay.AppendText(message + "\r\n");
-        }
 
-        //Database functions
+
+        //*********************************************************************
+        //************************ Database Functions *************************
+        //*********************************************************************
+
         private List<string> GetTableNames()
         {
             /*
@@ -457,42 +558,5 @@ namespace TechTreeEditor
         
 
 
-
-
-
-        /*
-        static void Main(string[] args)
-        {
-            MySqlConnection connection = new MySqlConnection(Properties.Settings.Default.myfirstdatabaseConnectionString);
-            MySqlCommand command = new MySqlCommand();
-            command.CommandText = 
-                "INSERT INTO customers(CustomerID,CompanyName,ContactName,Phone) " +
-                    "VALUES ('00001','AllState','Bill','(760) 375-1234')," +
-                           "('00002','StateFarm','Mandy','(760) 375-4321')," +
-                           "('00005','Geico','Greg','(760) 382-1234');";
-            command.Connection = connection;
-
-
-            connection.Open();
-            try
-            {
-                int aff = command.ExecuteNonQuery();
-                Console.WriteLine(aff + " rows were affected.");
-            }
-            catch
-            {
-                Console.WriteLine("Error encountered during INSERT operation.");
-            }
-            finally
-            {
-                connection.Close();
-            }
-            
-
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
-
-        }
-        */
     }
 }

@@ -447,7 +447,6 @@
             this.Name = "TechEditView";
             this.Text = "View / Edit Tech";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TechEditView_FormClosing);
-            this.Enter += new System.EventHandler(this.TechEditView_Enter);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.OtherInformationGroupBox.ResumeLayout(false);
