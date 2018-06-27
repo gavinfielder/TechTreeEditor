@@ -77,7 +77,6 @@ namespace TechTreeEditor
                     RemovePermanizesButton.Enabled = false;
                     SaveBehaviorDisplay.Visible = false;
                     RevertBehaviorDisplay.Visible = false;
-                    PermanizesSelfButton.Enabled = false;
                     //Read only (view mode) enables this option:
                     AlwaysViewSelectedCheckBox.Enabled = true;
                     AlwaysViewSelectedCheckBox.Visible = true;
@@ -115,7 +114,6 @@ namespace TechTreeEditor
             public bool techGrantreqsChanged = false;
             public List<uint> techPermanizes = new List<uint>();
             public bool techPermanizesChanged = false;
-            public bool techPermanizesSelf = false;
 
             //Sets all the fields to changed
             public void SetAllChanged(bool changed)
@@ -156,7 +154,6 @@ namespace TechTreeEditor
                 techCategoryChanged = other.techCategoryChanged;
                 techFieldName = other.techFieldName;
                 techFieldNameChanged = other.techFieldNameChanged;
-                techPermanizesSelf = other.techPermanizesSelf;
                 techPrereqs.Clear();
                 techGrantreqs.Clear();
                 techPermanizes.Clear();
@@ -341,7 +338,7 @@ namespace TechTreeEditor
             current.SetAllChanged(false);
             DisplayCurrent();
         }
-
+        
 
         //Validates the form data. Informs user of problems
         private bool ValidateForm()
@@ -1550,7 +1547,8 @@ namespace TechTreeEditor
             {
                 string idString = PermanizesListBox.Items[PermanizesListBox.SelectedIndex] as string;
                 idString = idString.Substring(0, 8);
-                current.techPermanizes.Remove(HexConverter.HexToInt(idString));
+                uint id = HexConverter.HexToInt(idString);
+                current.techPermanizes.Remove(id);
                 current.CheckPermanizesChanged(original);
                 PopulatePermanizes();
             }
@@ -1599,10 +1597,6 @@ namespace TechTreeEditor
                 techListView.CloseEditView(EditViewID);
                 //Now the form closes and disposes itself
             }
-        }
-        private void PermanizesSelfButton_Click(object sender, EventArgs e)
-        {
-            //TODO
         }
         private void DebugDisplayDataButton_Click(object sender, EventArgs e)
         {

@@ -57,7 +57,6 @@
             this.IsGrantreqForListBox = new System.Windows.Forms.ListBox();
             this.label10 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.PermanizesSelfButton = new System.Windows.Forms.Button();
             this.OtherInformationGroupBox = new System.Windows.Forms.GroupBox();
             this.label11 = new System.Windows.Forms.Label();
             this.IsPermanizedByListBox = new System.Windows.Forms.ListBox();
@@ -104,6 +103,7 @@
             // NameInput
             // 
             this.NameInput.Location = new System.Drawing.Point(270, 17);
+            this.NameInput.MaxLength = 32;
             this.NameInput.Name = "NameInput";
             this.NameInput.Size = new System.Drawing.Size(243, 20);
             this.NameInput.TabIndex = 2;
@@ -181,6 +181,7 @@
             // FieldNameInput
             // 
             this.FieldNameInput.Location = new System.Drawing.Point(270, 70);
+            this.FieldNameInput.MaxLength = 32;
             this.FieldNameInput.Name = "FieldNameInput";
             this.FieldNameInput.Size = new System.Drawing.Size(243, 20);
             this.FieldNameInput.TabIndex = 13;
@@ -329,7 +330,6 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.PermanizesSelfButton);
             this.groupBox1.Controls.Add(this.PrereqsListBox);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Controls.Add(this.label3);
@@ -345,16 +345,6 @@
             this.groupBox1.TabIndex = 32;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Graph Connections";
-            // 
-            // PermanizesSelfButton
-            // 
-            this.PermanizesSelfButton.Location = new System.Drawing.Point(231, 260);
-            this.PermanizesSelfButton.Name = "PermanizesSelfButton";
-            this.PermanizesSelfButton.Size = new System.Drawing.Size(55, 24);
-            this.PermanizesSelfButton.TabIndex = 21;
-            this.PermanizesSelfButton.Text = "Add Self";
-            this.PermanizesSelfButton.UseVisualStyleBackColor = true;
-            this.PermanizesSelfButton.Click += new System.EventHandler(this.PermanizesSelfButton_Click);
             // 
             // OtherInformationGroupBox
             // 
@@ -523,7 +513,6 @@
         private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Label RevertBehaviorDisplay;
         private System.Windows.Forms.CheckBox AlwaysViewSelectedCheckBox;
-        private System.Windows.Forms.Button PermanizesSelfButton;
         private System.Windows.Forms.Button DebugDisplayDataButton;
         private System.Windows.Forms.Button SaveAndCloseButton;
     }
