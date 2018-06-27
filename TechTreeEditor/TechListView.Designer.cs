@@ -113,6 +113,7 @@
             this.TechListGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.TechListGrid.Size = new System.Drawing.Size(641, 285);
             this.TechListGrid.TabIndex = 1;
+            this.TechListGrid.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.TechListGrid_CellDoubleClick);
             this.TechListGrid.SelectionChanged += new System.EventHandler(this.TechListGrid_SelectionChanged);
             // 
             // id
@@ -166,33 +167,33 @@
             this.CategoryComboBox.FormattingEnabled = true;
             this.CategoryComboBox.Location = new System.Drawing.Point(68, 44);
             this.CategoryComboBox.Name = "CategoryComboBox";
-            this.CategoryComboBox.Size = new System.Drawing.Size(206, 21);
+            this.CategoryComboBox.Size = new System.Drawing.Size(150, 21);
             this.CategoryComboBox.TabIndex = 13;
             // 
             // UpdateFiltersButton
             // 
-            this.UpdateFiltersButton.Location = new System.Drawing.Point(589, 19);
+            this.UpdateFiltersButton.Location = new System.Drawing.Point(487, 19);
             this.UpdateFiltersButton.Name = "UpdateFiltersButton";
-            this.UpdateFiltersButton.Size = new System.Drawing.Size(58, 20);
+            this.UpdateFiltersButton.Size = new System.Drawing.Size(82, 20);
             this.UpdateFiltersButton.TabIndex = 12;
-            this.UpdateFiltersButton.Text = "Refresh";
+            this.UpdateFiltersButton.Text = "Update Filters";
             this.UpdateFiltersButton.UseVisualStyleBackColor = true;
             this.UpdateFiltersButton.Click += new System.EventHandler(this.UpdateFiltersButton_Click);
             // 
             // ClearFiltersButton
             // 
-            this.ClearFiltersButton.Location = new System.Drawing.Point(589, 45);
+            this.ClearFiltersButton.Location = new System.Drawing.Point(487, 45);
             this.ClearFiltersButton.Name = "ClearFiltersButton";
-            this.ClearFiltersButton.Size = new System.Drawing.Size(59, 20);
+            this.ClearFiltersButton.Size = new System.Drawing.Size(82, 20);
             this.ClearFiltersButton.TabIndex = 11;
-            this.ClearFiltersButton.Text = "Clear";
+            this.ClearFiltersButton.Text = "Clear Filters";
             this.ClearFiltersButton.UseVisualStyleBackColor = true;
             this.ClearFiltersButton.Click += new System.EventHandler(this.ClearFiltersButton_Click);
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(318, 48);
+            this.label4.Location = new System.Drawing.Point(263, 48);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(61, 13);
             this.label4.TabIndex = 10;
@@ -200,15 +201,15 @@
             // 
             // FieldNameInput
             // 
-            this.FieldNameInput.Location = new System.Drawing.Point(385, 45);
+            this.FieldNameInput.Location = new System.Drawing.Point(330, 45);
             this.FieldNameInput.Name = "FieldNameInput";
-            this.FieldNameInput.Size = new System.Drawing.Size(198, 20);
+            this.FieldNameInput.Size = new System.Drawing.Size(151, 20);
             this.FieldNameInput.TabIndex = 9;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(281, 22);
+            this.label3.Location = new System.Drawing.Point(226, 22);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(98, 13);
             this.label3.TabIndex = 8;
@@ -216,9 +217,9 @@
             // 
             // NameFilterInput
             // 
-            this.NameFilterInput.Location = new System.Drawing.Point(385, 19);
+            this.NameFilterInput.Location = new System.Drawing.Point(330, 19);
             this.NameFilterInput.Name = "NameFilterInput";
-            this.NameFilterInput.Size = new System.Drawing.Size(198, 20);
+            this.NameFilterInput.Size = new System.Drawing.Size(151, 20);
             this.NameFilterInput.TabIndex = 7;
             // 
             // label2
@@ -232,10 +233,14 @@
             // 
             // IDRangeMaxInput
             // 
-            this.IDRangeMaxInput.Location = new System.Drawing.Point(174, 19);
+            this.IDRangeMaxInput.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
+            this.IDRangeMaxInput.Location = new System.Drawing.Point(146, 19);
             this.IDRangeMaxInput.Name = "IDRangeMaxInput";
-            this.IDRangeMaxInput.Size = new System.Drawing.Size(100, 20);
+            this.IDRangeMaxInput.Size = new System.Drawing.Size(72, 20);
             this.IDRangeMaxInput.TabIndex = 4;
+            this.IDRangeMaxInput.Text = "FFFFFFFF";
+            this.IDRangeMaxInput.TextChanged += new System.EventHandler(this.IDRangeMaxInput_TextChanged);
+            this.IDRangeMaxInput.Leave += new System.EventHandler(this.IDRangeMaxInput_Leave);
             // 
             // label1
             // 
@@ -248,10 +253,14 @@
             // 
             // IDRangeMinInput
             // 
+            this.IDRangeMinInput.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
             this.IDRangeMinInput.Location = new System.Drawing.Point(68, 19);
             this.IDRangeMinInput.Name = "IDRangeMinInput";
-            this.IDRangeMinInput.Size = new System.Drawing.Size(100, 20);
+            this.IDRangeMinInput.Size = new System.Drawing.Size(72, 20);
             this.IDRangeMinInput.TabIndex = 2;
+            this.IDRangeMinInput.Text = "00000000";
+            this.IDRangeMinInput.TextChanged += new System.EventHandler(this.IDRangeMinInput_TextChanged);
+            this.IDRangeMinInput.Leave += new System.EventHandler(this.IDRangeMinInput_Leave);
             // 
             // AddTechButton
             // 
@@ -288,23 +297,27 @@
             // ShowTablesButton
             // 
             this.ShowTablesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.ShowTablesButton.Enabled = false;
             this.ShowTablesButton.Location = new System.Drawing.Point(671, 351);
             this.ShowTablesButton.Name = "ShowTablesButton";
             this.ShowTablesButton.Size = new System.Drawing.Size(86, 23);
             this.ShowTablesButton.TabIndex = 6;
             this.ShowTablesButton.Text = "Show Tables";
             this.ShowTablesButton.UseVisualStyleBackColor = true;
+            this.ShowTablesButton.Visible = false;
             this.ShowTablesButton.Click += new System.EventHandler(this.ShowTablesButton_Click);
             // 
             // InitializeDatabaseButton
             // 
             this.InitializeDatabaseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.InitializeDatabaseButton.Enabled = false;
             this.InitializeDatabaseButton.Location = new System.Drawing.Point(671, 322);
             this.InitializeDatabaseButton.Name = "InitializeDatabaseButton";
             this.InitializeDatabaseButton.Size = new System.Drawing.Size(86, 23);
             this.InitializeDatabaseButton.TabIndex = 7;
             this.InitializeDatabaseButton.Text = "Initialize DB";
             this.InitializeDatabaseButton.UseVisualStyleBackColor = true;
+            this.InitializeDatabaseButton.Visible = false;
             this.InitializeDatabaseButton.Click += new System.EventHandler(this.InitializeDatabaseButton_Click);
             // 
             // AddPrereqButton

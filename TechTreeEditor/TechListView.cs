@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Devart.Data.MySql;
+using System.Text.RegularExpressions;
 
 namespace TechTreeEditor
 {
@@ -29,6 +30,7 @@ namespace TechTreeEditor
             public string fieldName;
         }
         private FilterOptions currentFilters;
+        private Regex IDRgx; //matches if invalid hex string
 
         //Returns the number of open tech edit views that are in Edit or Add mode
         public int NumberOfOpenEditingViews
@@ -82,6 +84,8 @@ namespace TechTreeEditor
             currentFilters.fieldName = "";
             currentFilters.category = "";
             observers = new List<TechEditView>();
+            LoadCategories();
+            IDRgx = new Regex(@"[^0123456789ABCDEFabcdef]");
         }
         ~TechListView()
         {
@@ -173,21 +177,55 @@ namespace TechTreeEditor
         }
         private void UpdateFiltersButton_Click(object sender, EventArgs e)
         {
-            /*
-            if (IDRangeMinInput.Text != "" || IDRangeMaxInput.Text != "")
+            //Determine if filtering by ID Range
+            if (IDRangeMinInput.Text != "00000000" || IDRangeMaxInput.Text != "FFFFFFFF")
             {
                 currentFilters.idRangeActive = true;
                 currentFilters.idRangeMin = HexConverter.HexToInt(IDRangeMinInput.Text);
                 currentFilters.idRangeMax = HexConverter.HexToInt(IDRangeMaxInput.Text);
             }
-            //TODO other filters
-            */
-            FetchTechList(currentFilters);
+            else
+            {
+                currentFilters.idRangeActive = false;
+            }
+            //Determine if filtering by Category
+            if (CategoryComboBox.SelectedIndex >= 0)
+            {
+                currentFilters.categoryActive = true;
+                currentFilters.category = CategoryComboBox.Items[
+                    CategoryComboBox.SelectedIndex] as string;
+            }
+            else
+            {
+                currentFilters.categoryActive = false;
+            }
+            //Determine if filtering by name string match
+            if (NameFilterInput.Text != "")
+            {
+                currentFilters.nameStringMatchActive = true;
+                currentFilters.nameString = NameFilterInput.Text.Trim(' ');
+            }
+            else
+            {
+                currentFilters.nameStringMatchActive = false;
+            }
+            //Determine if filtering by field name
+            if (FieldNameInput.Text != "")
+            {
+                currentFilters.fieldNameActive = true;
+                currentFilters.fieldName = FieldNameInput.Text;
+            }
+            else
+            {
+                currentFilters.fieldNameActive = false;
+            }
+            
+            RefreshList();
         }
         private void ClearFiltersButton_Click(object sender, EventArgs e)
         {
-            IDRangeMinInput.Text = "";
-            IDRangeMaxInput.Text = "";
+            IDRangeMinInput.Text = "00000000";
+            IDRangeMaxInput.Text = "FFFFFFFF";
             CategoryComboBox.SelectedIndex = -1;
             NameFilterInput.Text = "";
             FieldNameInput.Text = "";
@@ -339,7 +377,56 @@ namespace TechTreeEditor
 
             }
         }
-
+        private void IDRangeMinInput_TextChanged(object sender, EventArgs e)
+        {
+            //Validate valid hex. If not hex, remove all non-hex characters
+            if (IDRgx.IsMatch(IDRangeMinInput.Text))
+            {
+                int i = 0;
+                while (i < IDRangeMinInput.Text.Length)
+                {
+                    //Remove all non-hex characters
+                    if (IDRgx.IsMatch(IDRangeMinInput.Text.Substring(i, 1)))
+                        IDRangeMinInput.Text = IDRangeMinInput.Text.Substring(0, i) + IDRangeMinInput.Text.Substring(i + 1);
+                    else i++;
+                }
+            }
+        }
+        private void IDRangeMaxInput_TextChanged(object sender, EventArgs e)
+        {
+            //Validate valid hex. If not hex, remove all non-hex characters
+            if (IDRgx.IsMatch(IDRangeMaxInput.Text))
+            {
+                int i = 0;
+                while (i < IDRangeMaxInput.Text.Length)
+                {
+                    //Remove all non-hex characters
+                    if (IDRgx.IsMatch(IDRangeMaxInput.Text.Substring(i, 1)))
+                        IDRangeMaxInput.Text = IDRangeMaxInput.Text.Substring(0, i) + IDRangeMaxInput.Text.Substring(i + 1);
+                    else i++;
+                }
+            }
+        }
+        private void IDRangeMinInput_Leave(object sender, EventArgs e)
+        {
+            //Pad leading zeroes to make length 8
+            while (IDRangeMinInput.Text.Length < 8)
+            {
+                IDRangeMinInput.Text = "0" + IDRangeMinInput.Text;
+            }
+        }
+        private void IDRangeMaxInput_Leave(object sender, EventArgs e)
+        {
+            //Pad leading zeroes to make length 8
+            while (IDRangeMaxInput.Text.Length < 8)
+            {
+                IDRangeMaxInput.Text = "0" + IDRangeMaxInput.Text;
+            }
+        }
+        private void TechListGrid_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            ViewTechButton_Click(sender, e);
+        }
 
         //*********************************************************************
         //************************ Database Functions *************************
@@ -556,7 +643,7 @@ namespace TechTreeEditor
             if (filters.categoryActive)
             {
                 if (numFilters > 0) command.CommandText += "AND ";
-                command.CommandText += "category = '" + filters.category + "' ";
+                command.CommandText += "category='" + filters.category + "' ";
                 numFilters++;
             }
             if (filters.fieldNameActive)
@@ -634,7 +721,31 @@ namespace TechTreeEditor
             deletor.Dispose();
             RefreshList();
         }
-        
+        //Populates the categories combo box
+        public void LoadCategories()
+        {
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT * FROM categories;";
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            try
+            {
+                CategoryComboBox.Items.Clear();
+                while (reader.Read())
+                {
+                    CategoryComboBox.Items.Add(reader.GetString(0));
+                }
+            }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show("An error occurred while loading categories: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
 
 
     }
