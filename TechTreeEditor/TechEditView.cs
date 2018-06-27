@@ -343,7 +343,12 @@ namespace TechTreeEditor
         //Validates the form data. Informs user of problems
         private bool ValidateForm()
         {
-            //ID self validates
+            //Validate that ID isn't 0
+            if (IDInput.Text == "00000000")
+            {
+                MessageBox.Show("00000000 Is a reserved ID.");
+                return false;
+            }
             //Validate cost per day
             if (current.techCostPerDay < 0)
             {
@@ -416,7 +421,10 @@ namespace TechTreeEditor
         private void EditTech()
         {
             //Only allowed while in edit mode
-            if (Mode != ViewMode.EDITING) return;
+            if (Mode != ViewMode.EDITING) return;            
+            //Validate the form. Inform user of any problems
+            bool valid = ValidateForm();
+            if (!(valid)) return;
             bool error = false;
             if (current.techIDChanged)
             {
