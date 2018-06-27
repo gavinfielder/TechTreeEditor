@@ -171,19 +171,19 @@
             // 
             // UpdateFiltersButton
             // 
-            this.UpdateFiltersButton.Location = new System.Drawing.Point(596, 19);
+            this.UpdateFiltersButton.Location = new System.Drawing.Point(589, 19);
             this.UpdateFiltersButton.Name = "UpdateFiltersButton";
-            this.UpdateFiltersButton.Size = new System.Drawing.Size(51, 20);
+            this.UpdateFiltersButton.Size = new System.Drawing.Size(58, 20);
             this.UpdateFiltersButton.TabIndex = 12;
-            this.UpdateFiltersButton.Text = "Update";
+            this.UpdateFiltersButton.Text = "Refresh";
             this.UpdateFiltersButton.UseVisualStyleBackColor = true;
             this.UpdateFiltersButton.Click += new System.EventHandler(this.UpdateFiltersButton_Click);
             // 
             // ClearFiltersButton
             // 
-            this.ClearFiltersButton.Location = new System.Drawing.Point(597, 45);
+            this.ClearFiltersButton.Location = new System.Drawing.Point(589, 45);
             this.ClearFiltersButton.Name = "ClearFiltersButton";
-            this.ClearFiltersButton.Size = new System.Drawing.Size(51, 20);
+            this.ClearFiltersButton.Size = new System.Drawing.Size(59, 20);
             this.ClearFiltersButton.TabIndex = 11;
             this.ClearFiltersButton.Text = "Clear";
             this.ClearFiltersButton.UseVisualStyleBackColor = true;
@@ -202,7 +202,7 @@
             // 
             this.FieldNameInput.Location = new System.Drawing.Point(385, 45);
             this.FieldNameInput.Name = "FieldNameInput";
-            this.FieldNameInput.Size = new System.Drawing.Size(206, 20);
+            this.FieldNameInput.Size = new System.Drawing.Size(198, 20);
             this.FieldNameInput.TabIndex = 9;
             // 
             // label3
@@ -218,7 +218,7 @@
             // 
             this.NameFilterInput.Location = new System.Drawing.Point(385, 19);
             this.NameFilterInput.Name = "NameFilterInput";
-            this.NameFilterInput.Size = new System.Drawing.Size(206, 20);
+            this.NameFilterInput.Size = new System.Drawing.Size(198, 20);
             this.NameFilterInput.TabIndex = 7;
             // 
             // label2

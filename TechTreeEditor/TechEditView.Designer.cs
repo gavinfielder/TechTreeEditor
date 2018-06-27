@@ -57,13 +57,15 @@
             this.IsGrantreqForListBox = new System.Windows.Forms.ListBox();
             this.label10 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.PermanizesSelfButton = new System.Windows.Forms.Button();
             this.OtherInformationGroupBox = new System.Windows.Forms.GroupBox();
             this.label11 = new System.Windows.Forms.Label();
             this.IsPermanizedByListBox = new System.Windows.Forms.ListBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.RevertBehaviorDisplay = new System.Windows.Forms.Label();
             this.AlwaysViewSelectedCheckBox = new System.Windows.Forms.CheckBox();
-            this.PermanizesSelfButton = new System.Windows.Forms.Button();
+            this.DebugDisplayDataButton = new System.Windows.Forms.Button();
+            this.SaveAndCloseButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.OtherInformationGroupBox.SuspendLayout();
             this.groupBox3.SuspendLayout();
@@ -344,6 +346,16 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Graph Connections";
             // 
+            // PermanizesSelfButton
+            // 
+            this.PermanizesSelfButton.Location = new System.Drawing.Point(231, 260);
+            this.PermanizesSelfButton.Name = "PermanizesSelfButton";
+            this.PermanizesSelfButton.Size = new System.Drawing.Size(55, 24);
+            this.PermanizesSelfButton.TabIndex = 21;
+            this.PermanizesSelfButton.Text = "Add Self";
+            this.PermanizesSelfButton.UseVisualStyleBackColor = true;
+            this.PermanizesSelfButton.Click += new System.EventHandler(this.PermanizesSelfButton_Click);
+            // 
             // OtherInformationGroupBox
             // 
             this.OtherInformationGroupBox.Controls.Add(this.label11);
@@ -420,21 +432,37 @@
             this.AlwaysViewSelectedCheckBox.Visible = false;
             this.AlwaysViewSelectedCheckBox.CheckedChanged += new System.EventHandler(this.AlwaysViewSelectedCheckBox_CheckedChanged);
             // 
-            // PermanizesSelfButton
+            // DebugDisplayDataButton
             // 
-            this.PermanizesSelfButton.Location = new System.Drawing.Point(231, 260);
-            this.PermanizesSelfButton.Name = "PermanizesSelfButton";
-            this.PermanizesSelfButton.Size = new System.Drawing.Size(55, 24);
-            this.PermanizesSelfButton.TabIndex = 21;
-            this.PermanizesSelfButton.Text = "Add Self";
-            this.PermanizesSelfButton.UseVisualStyleBackColor = true;
-            this.PermanizesSelfButton.Click += new System.EventHandler(this.PermanizesSelfButton_Click);
+            this.DebugDisplayDataButton.Enabled = false;
+            this.DebugDisplayDataButton.Location = new System.Drawing.Point(310, 484);
+            this.DebugDisplayDataButton.Name = "DebugDisplayDataButton";
+            this.DebugDisplayDataButton.Size = new System.Drawing.Size(109, 29);
+            this.DebugDisplayDataButton.TabIndex = 36;
+            this.DebugDisplayDataButton.Text = "Debug display data";
+            this.DebugDisplayDataButton.UseVisualStyleBackColor = true;
+            this.DebugDisplayDataButton.Visible = false;
+            this.DebugDisplayDataButton.Click += new System.EventHandler(this.DebugDisplayDataButton_Click);
+            // 
+            // SaveAndCloseButton
+            // 
+            this.SaveAndCloseButton.Enabled = false;
+            this.SaveAndCloseButton.Location = new System.Drawing.Point(12, 484);
+            this.SaveAndCloseButton.Name = "SaveAndCloseButton";
+            this.SaveAndCloseButton.Size = new System.Drawing.Size(88, 29);
+            this.SaveAndCloseButton.TabIndex = 37;
+            this.SaveAndCloseButton.Text = "Save + Close";
+            this.SaveAndCloseButton.UseVisualStyleBackColor = true;
+            this.SaveAndCloseButton.Visible = false;
+            this.SaveAndCloseButton.Click += new System.EventHandler(this.SaveAndCloseButton_Click);
             // 
             // TechEditView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(548, 507);
+            this.ClientSize = new System.Drawing.Size(548, 521);
+            this.Controls.Add(this.SaveAndCloseButton);
+            this.Controls.Add(this.DebugDisplayDataButton);
             this.Controls.Add(this.AlwaysViewSelectedCheckBox);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.OtherInformationGroupBox);
@@ -443,7 +471,7 @@
             this.Controls.Add(this.RevertButton);
             this.Controls.Add(this.SaveBehaviorDisplay);
             this.Controls.Add(this.SaveButton);
-            this.MaximumSize = new System.Drawing.Size(564, 546);
+            this.MaximumSize = new System.Drawing.Size(564, 560);
             this.Name = "TechEditView";
             this.Text = "View / Edit Tech";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TechEditView_FormClosing);
@@ -496,5 +524,7 @@
         private System.Windows.Forms.Label RevertBehaviorDisplay;
         private System.Windows.Forms.CheckBox AlwaysViewSelectedCheckBox;
         private System.Windows.Forms.Button PermanizesSelfButton;
+        private System.Windows.Forms.Button DebugDisplayDataButton;
+        private System.Windows.Forms.Button SaveAndCloseButton;
     }
 }

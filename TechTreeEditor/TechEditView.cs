@@ -39,6 +39,8 @@ namespace TechTreeEditor
                     SaveBehaviorDisplay.Text = "Adds this tech to the database";
                     OtherInformationGroupBox.Enabled = false;
                     OtherInformationGroupBox.Visible = false;
+                    SaveAndCloseButton.Visible = true;
+                    SaveAndCloseButton.Enabled = true;
                 }
                 else if (value == ViewMode.EDITING)
                 {
@@ -50,6 +52,8 @@ namespace TechTreeEditor
                     RevertBehaviorDisplay.Visible = true;
                     OtherInformationGroupBox.Enabled = true;
                     OtherInformationGroupBox.Visible = true;
+                    SaveAndCloseButton.Visible = true;
+                    SaveAndCloseButton.Enabled = true;
                 }
                 else if (value == ViewMode.READ_ONLY)
                 {
@@ -73,6 +77,7 @@ namespace TechTreeEditor
                     RemovePermanizesButton.Enabled = false;
                     SaveBehaviorDisplay.Visible = false;
                     RevertBehaviorDisplay.Visible = false;
+                    PermanizesSelfButton.Enabled = false;
                     //Read only (view mode) enables this option:
                     AlwaysViewSelectedCheckBox.Enabled = true;
                     AlwaysViewSelectedCheckBox.Visible = true;
@@ -330,10 +335,13 @@ namespace TechTreeEditor
         //Reverts the form to the original data
         public void Revert()
         {
+            //Only allowed in edit mode
+            if (Mode != ViewMode.EDITING) return;
             current.Copy(original);
             current.SetAllChanged(false);
             DisplayCurrent();
         }
+
 
         //Validates the form data. Informs user of problems
         private bool ValidateForm()
@@ -379,13 +387,14 @@ namespace TechTreeEditor
         //Loads a tech from database and populates the fields
         public void ViewTech(uint id)
         {
+            //This uses the changed flags to flag load success
             TechDataContainer input = new TechDataContainer();
             input.SetAllChanged(false);
             input.techIDChanged = FetchTech(id, ref input);
             input.techPrereqsChanged = FetchPrereqs(id, ref input);
             input.techGrantreqsChanged = FetchGrantreqs(id, ref input);
-            //input.techPermanizesChanged = FetchPermanizes(id, ref input);
-            input.techPermanizesChanged = true; //TODO: remove when implemented
+            input.techPermanizesChanged = FetchPermanizes(id, ref input);
+            //Check if success and then copy to current and original
             if (input.techIDChanged && input.techPrereqsChanged &&
                 input.techGrantreqsChanged && input.techPermanizesChanged)
             {
@@ -393,7 +402,11 @@ namespace TechTreeEditor
                 current.Copy(input);
                 original.Copy(input);
                 current.SetAllChanged(false);
+                original.SetAllChanged(false);
                 DisplayCurrent();
+                PopulateIsPrereqFor();
+                PopulateIsGrantreqFor();
+                PopulateIsPermanizedBy();
             }
             else
             {
@@ -402,15 +415,180 @@ namespace TechTreeEditor
             }
         }
         //Updates an existing record with the updated information
-        private void EditTech(uint id)
+        private void EditTech()
         {
             //Only allowed while in edit mode
-            if (Mode != ViewMode.EDITING) return; 
-            //TODO
+            if (Mode != ViewMode.EDITING) return;
+            bool error = false;
+            if (current.techIDChanged)
+            {
+                //Get connections to original
+                List<uint> IsPrereqFor = new List<uint>();
+                List<uint> IsGrantreqFor = new List<uint>();
+                List<uint> IsPermanizedBy = new List<uint>();
+                error = !(FetchConnectionsToOriginal(ref IsPrereqFor,
+                    ref IsGrantreqFor, ref IsPermanizedBy));
+                if (error) return;
+                //Delete connections to the original tech
+                error = !(DeleteConnectionsToOriginal());
+                if (error)
+                {
+                    techListView.Log("Tech update compromised, " +
+                        "aborting. Check tech_prereqs, tech_grantreqs, " +
+                        "and tech_permanizes for errors involving ids " +
+                        original.techID + " or " + current.techID);
+                    return;
+                }
+                //Delete the original tech's connections
+                error = !(DeletePrereqsOfOriginal() &
+                    DeleteGrantreqsOfOriginal() &
+                    DeletePermanizesOfOriginal());
+                if (error)
+                {
+                    techListView.Log("Tech update compromised, " +
+                        "aborting. Check tech_prereqs, tech_grantreqs, " +
+                        "and tech_permanizes for errors involving ids " +
+                        original.techID + " or " + current.techID);
+                    return;
+                }
+                //Delete the original tech
+                error = !(DeleteOriginalTech());
+                if (error)
+                {
+                    techListView.Log("Tech update compromised, " +
+                        "aborting. Check tech for errors involving id " +
+                        original.techID);
+                    return;
+                }
+                //Insert the tech with updated ID
+                error = !(InsertCurrentTech());
+                if (error)
+                {
+                    techListView.Log("Tech update compromised, " +
+                        "aborting. Check tech, tech_prereqs, tech_grantreqs, " +
+                        "and tech_permanizes for errors involving id " +
+                        current.techID);
+                    return;
+                }
+                //Insert connections to the tech
+                error = !(InsertConnectionsToUpdated(IsPrereqFor,
+                    IsGrantreqFor, IsPermanizedBy));
+                if (error)
+                {
+                    techListView.Log("Tech update compromised, " +
+                        "aborting. Check tech_prereqs, tech_grantreqs, " +
+                        "and tech_permanizes for errors involving ids " +
+                        current.techID);
+                    return;
+                }
+                //Insert prereqs and grantreqs and permanizes of the updated tech
+                error = !(InsertPrereqs() & InsertGrantreqs() & InsertPermanizes());
+                if (error)
+                {
+                    techListView.Log("Tech update compromised, " +
+                        "aborting. Check tech_prereqs, tech_grantreqs, " +
+                        "and tech_permanizes for errors involving ids " +
+                        current.techID);
+                    return;
+                }
+                techListView.Log("Edited tech: " + original.techID + " has " +
+                    "been changed to " + current.techID + " (" + current.techName +
+                    ")");
+            }
+            else
+            {
+                //ID has not been changed. 
+                if (current.techCostPerDayChanged || 
+                    current.techNumberDaysChanged ||
+                    current.techCategoryChanged ||
+                    current.techFieldNameChanged ||
+                    current.techNameChanged)
+                {
+                    error = !(UpdateTech());
+                    if (error)
+                    {
+                        techListView.Log("An error has occurred while " +
+                            "editing tech. Aborting. Please check " +
+                            "integrity of id " + current.techID + " in tech");
+                        return;
+                    }
+                }
+                if (current.techPrereqsChanged)
+                {
+                    error = !(DeletePrereqs());
+                    if (error)
+                    {
+                        techListView.Log("An error has occurred while " +
+                            "editing tech (deleting prereqs). Aborting. " +
+                            "Please check integrity of id " + 
+                            current.techID + " in tech_prereqs");
+                        return;
+                    }
+                    error = !(InsertPrereqs());
+                    if (error)
+                    {
+                        techListView.Log("An error has occurred while " +
+                            "editing tech (inserting prereqs). Aborting. " +
+                            "Please check integrity of id " +
+                            current.techID + " in tech_prereqs");
+                        return;
+                    }
+                }
+                if (current.techGrantreqsChanged)
+                {
+                    error = !(DeleteGrantreqs());
+                    if (error)
+                    {
+                        techListView.Log("An error has occurred while " +
+                            "editing tech (deleting grantreqs). Aborting. " +
+                            "Please check integrity of id " +
+                            current.techID + " in tech_grantreqs");
+                        return;
+                    }
+                    error = !(InsertGrantreqs());
+                    if (error)
+                    {
+                        techListView.Log("An error has occurred while " +
+                            "editing tech (inserting grantreqs). Aborting. " +
+                            "Please check integrity of id " +
+                            current.techID + " in tech_grantreqs");
+                        return;
+                    }
+                }
+                if (current.techPermanizesChanged)
+                {
+                    error = !(DeletePermanizes());
+                    if (error)
+                    {
+                        techListView.Log("An error has occurred while " +
+                            "editing tech (deleting permanizes). Aborting. " +
+                            "Please check integrity of id " +
+                            current.techID + " in tech_permanizes");
+                        return;
+                    }
+                    error = !(InsertPermanizes());
+                    if (error)
+                    {
+                        techListView.Log("An error has occurred while " +
+                            "editing tech (inserting permanizes). Aborting. " +
+                            "Please check integrity of id " +
+                            current.techID + " in tech_permanizes");
+                        return;
+                    }
+                }
+                techListView.Log("Tech updated: " + current.techName +
+                    "(" + HexConverter.IntToHex(current.techID) + ")");
+            }
+            //Tech updated successfully. Update original to reflect new
+            current.SetAllChanged(false);
+            original.Copy(current);
+            UpdateTitleBar();
+            techListView.RefreshList();
         }
         //Adds a new tech
         private void AddTech()
         {
+            //TODO: add error checking in this function
             //Only allowed while in add mode
             if (Mode != ViewMode.ADDING_NEW) return;
             //Validate the form. Inform user of any problems
@@ -423,43 +601,23 @@ namespace TechTreeEditor
             //Insert new tech grantrequisites
             InsertGrantreqs();
             //Insert new tech permanizes
-            //TODO
+            InsertPermanizes();
             //Once done, change mode to edit and set the original to the new record
             Mode = ViewMode.EDITING;
             current.SetAllChanged(false);
             original.Copy(current);
             UpdateTitleBar();
+            techListView.Log("Tech added: " + current.techName +
+               "(" + HexConverter.IntToHex(current.techID) + ")");
+            techListView.RefreshList();
         }
         
         //*********************************************************************
         //************************ Database Functions *************************
         //*********************************************************************
 
-        //Inserts current as a new record into tech table
-        private void InsertCurrentTech()
-        {
-            MySqlCommand command = new MySqlCommand();
-            command.Connection = connection;
-            command.CommandText = "INSERT INTO tech " +
-                "VALUES(" + current.techID + ",'" + current.techName + "','" +
-                current.techCategory + "','" + current.techFieldName + "'," +
-                current.techCostPerDay + "," + current.techNumberDays + ");";
-            try
-            {
-                connection.Open();
-                command.ExecuteNonQuery();
-                //command.BeginExecuteNonQuery();
-            }
-            catch (MySqlException ex)
-            {
-                techListView.Log("An error occurred: " + ex.Message);
-            }
-            finally
-            {
-                techListView.Log("Tech inserted: " + current.techName);
-                connection.Close();
-            }
-        }
+        //Read operations only
+
         //Populates the categories combo box
         public void LoadCategories()
         {
@@ -691,12 +849,178 @@ namespace TechTreeEditor
         //Populates the Permanizes list box
         private void PopulatePermanizes()
         {
-            //TODO
+            PermanizesListBox.Items.Clear();
+            if (current.techPermanizes.Count == 0) return;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT id, name FROM tech " +
+                "WHERE ";
+            int numberOfTechs = 0;
+            foreach (uint id in current.techPermanizes)
+            {
+                if (numberOfTechs > 0) command.CommandText += "OR ";
+                command.CommandText += "id=" + id + " ";
+                numberOfTechs++;
+            }
+            string nameInput;
+            uint idInput;
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            try
+            {
+                while (reader.Read())
+                {
+                    idInput = reader.GetUInt32(0);
+                    nameInput = reader.GetString(1);
+                    PermanizesListBox.Items.Add(
+                        HexConverter.IntToHex(idInput) + ": " + nameInput);
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        //Populates "is a prereq for" listbox
+        public void PopulateIsPrereqFor()
+        {
+            IsPrereqForListBox.Items.Clear();
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT T.name, P.id " +
+                "FROM tech AS T, tech_prereqs AS P " +
+                "WHERE T.id = P.id " +
+                "AND P.prereq_id = " + current.techID + ";";
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            try
+            {
+                string item;
+                IsPrereqForListBox.ClearSelected();
+                while (reader.Read())
+                {
+                    item = reader.GetString(0) + " (" +
+                        HexConverter.IntToHex(reader.GetUInt32(1)) + ")";
+                    IsPrereqForListBox.Items.Add(item);
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "populating IsPrereqFor: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        //Populates "is a grantreq for" listbox
+        public void PopulateIsGrantreqFor()
+        {
+            IsGrantreqForListBox.Items.Clear();
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT T.name, G.id " +
+                "FROM tech AS T, tech_grantreqs AS G " +
+                "WHERE T.id = G.id " +
+                "AND G.grantreq_id = " + current.techID + ";";
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            try
+            {
+                string item;
+                IsGrantreqForListBox.ClearSelected();
+                while (reader.Read())
+                {
+                    item = reader.GetString(0) + " (" +
+                        HexConverter.IntToHex(reader.GetUInt32(1)) + ")";
+                    IsGrantreqForListBox.Items.Add(item);
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "populating IsGrantreqFor: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        //Populates "is permanized by" listbox
+        public void PopulateIsPermanizedBy()
+        {
+            IsPermanizedByListBox.Items.Clear();
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "SELECT T.name, P.id " +
+                "FROM tech AS T, tech_permanizes AS P " +
+                "WHERE T.id = P.id " +
+                "AND P.permanizes_id = " + current.techID + ";";
+            connection.Open();
+            MySqlDataReader reader = command.ExecuteReader();
+            try
+            {
+                string item;
+                IsPermanizedByListBox.ClearSelected();
+                while (reader.Read())
+                {
+                    item = reader.GetString(0) + " (" +
+                        HexConverter.IntToHex(reader.GetUInt32(1)) + ")";
+                    IsPermanizedByListBox.Items.Add(item);
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "populating IsPermanizedBy: " + ex.Message);
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+
+        //Writing operations
+
+        //Inserts current as a new record into tech table
+        private bool InsertCurrentTech()
+        {
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "INSERT INTO tech " +
+                "VALUES(" + current.techID + ",'" + current.techName + "','" +
+                current.techCategory + "','" + current.techFieldName + "'," +
+                current.techCostPerDay + "," + current.techNumberDays + ");";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+                //command.BeginExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while inserting tech: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                techListView.Log("Tech inserted: " + current.techName +
+                    "(" + HexConverter.IntToHex(current.techID) + ")");
+                connection.Close();
+            }
+            return success;
         }
         //Inserts all prereqs as new prereq relationships
-        private void InsertPrereqs()
+        private bool InsertPrereqs()
         {
-            if (current.techPrereqs.Count == 0) return;
+            if (current.techPrereqs.Count == 0) return true;
+            bool success = true;
             MySqlCommand command = new MySqlCommand();
             command.Connection = connection;
             command.CommandText = "INSERT INTO tech_prereqs VALUES";
@@ -711,25 +1035,26 @@ namespace TechTreeEditor
             try
             {
                 connection.Open();
-                //techListView.Log("Inserting into tech_prereqs with command = \"" +
-                    //command.CommandText + "\"");
                 command.ExecuteNonQuery();
 
             }
             catch (MySqlException ex)
             {
-                techListView.Log("An error occurred: " + ex.Message);
+                techListView.Log("An error occurred while inserting prereqs: " + ex.Message);
+                success = false;
             }
             finally
             {
                 connection.Close();
                 techListView.Log(numberOfPrereqs + " prerequisites inserted.");
             }
-        }
+            return success;
+        }        
         //Inserts all grantreqs as new grantreq relationships
-        private void InsertGrantreqs()
+        private bool InsertGrantreqs()
         {
-            if (current.techGrantreqs.Count == 0) return;
+            if (current.techGrantreqs.Count == 0) return true;
+            bool success = true;
             MySqlCommand command = new MySqlCommand();
             command.Connection = connection;
             command.CommandText = "INSERT INTO tech_grantreqs VALUES";
@@ -744,20 +1069,390 @@ namespace TechTreeEditor
             try
             {
                 connection.Open();
-                //techListView.Log("Inserting " + numberOfGrantreqs + " records into tech_grantreqs with command = \"" +
-                    //command.CommandText + "\"");
                 command.ExecuteNonQuery();
-
             }
             catch (MySqlException ex)
             {
-                techListView.Log("An error occurred: " + ex.Message);
+                techListView.Log("An error occurred while inserting grantreqs: " + ex.Message);
+                success = false;
             }
             finally
             {
                 connection.Close();
                 techListView.Log(numberOfGrantreqs + " grantrequisites inserted.");
             }
+            return success;
+        }
+        //Inserts all permanizes as new permanizes relationships
+        private bool InsertPermanizes()
+        {
+            if (current.techPermanizes.Count == 0) return true;
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "INSERT INTO tech_permanizes VALUES";
+            int numberOfPermanizes = 0;
+            foreach (uint id in current.techPermanizes)
+            {
+                if (numberOfPermanizes > 0) command.CommandText += ",";
+                command.CommandText += "(" + current.techID + "," + id + ")";
+                numberOfPermanizes++;
+            }
+            command.CommandText += ";";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while inserting permanizes: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+                techListView.Log(numberOfPermanizes + " permanizes " +
+                    "relationships inserted.");
+            }
+            return success;
+        }
+        //Updates the current tech record. Assumes ID unchanged.
+        private bool UpdateTech()
+        {
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "REPLACE tech " +
+                "VALUES(" + current.techID + ",'" + current.techName + "','" +
+                current.techCategory + "','" + current.techFieldName + "'," +
+                current.techCostPerDay + "," + current.techNumberDays + ");";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while replacing tech: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                techListView.Log("Tech replaced: " + current.techName + 
+                    "(" + HexConverter.IntToHex(current.techID) + ")");
+                connection.Close();
+            }
+            return success;
+        }
+        //Deletes all prereqs of the current tech
+        public bool DeletePrereqs()
+        {
+            //Note: this function is public so tech list view can call it
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "DELETE FROM tech_prereqs " +
+                "WHERE id=" + current.techID + ";";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "deleting prereqs: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Deletes all grantreqs of the current tech
+        public bool DeleteGrantreqs()
+        {
+            //Note: this function is public so tech list view can call it
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "DELETE FROM tech_grantreqs " +
+                "WHERE id=" + current.techID + ";";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "deleting grantreqs: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Deletes all permanizes relationships of the current tech
+        public bool DeletePermanizes()
+        {
+            //Note: this function is public so tech list view can call it
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "DELETE FROM tech_permanizes " +
+                "WHERE id=" + current.techID + ";";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "deleting permanizes: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Deletes the original tech. Does not check for connections to it
+        public bool DeleteOriginalTech()
+        {
+            //Note: this function is public so tech list view can call it
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "DELETE FROM tech WHERE id=" + original.techID + ";";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while deleting the original " +
+                    "tech: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                techListView.Log("Tech deleted: " + original.techName +
+                    "(" + HexConverter.IntToHex(original.techID) + ")");
+                connection.Close();
+            }
+            return success;
+        }
+        //Retrieves lists of connections to the original tech.
+        private bool FetchConnectionsToOriginal(ref List<uint> IsPrereqFor,
+            ref List<uint> IsGrantreqFor, ref List<uint> IsPermanizedBy)
+        {
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            MySqlDataReader reader;
+            connection.Open();
+            try
+            {
+                command.CommandText = "SELECT id FROM tech_prereqs " +
+                    "WHERE prereq_id=" + original.techID;
+                reader = command.ExecuteReader();
+                while (reader.Read())
+                    IsPrereqFor.Add(reader.GetUInt32(0));
+                command.CommandText = "SELECT id FROM tech_grantreqs " +
+                    "WHERE grantreq_id=" + original.techID;
+                reader = command.ExecuteReader();
+                while (reader.Read())
+                    IsGrantreqFor.Add(reader.GetUInt32(0));
+                command.CommandText = "SELECT id FROM tech_permanizes " +
+                    "WHERE permanizes_id=" + original.techID;
+                reader = command.ExecuteReader();
+                while (reader.Read())
+                    IsPermanizedBy.Add(reader.GetUInt32(0));
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while loading " +
+                    "other connections in update process: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Deletes connections to the original tech
+        private bool DeleteConnectionsToOriginal()
+        {
+
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            connection.Open();
+            try
+            {
+                command.CommandText = "DELETE FROM tech_prereqs " +
+                    "WHERE prereq_id=" + original.techID;
+                command.ExecuteNonQuery();
+                command.CommandText = "DELETE FROM tech_grantreqs " +
+                    "WHERE grantreq_id=" + original.techID;
+                command.ExecuteNonQuery();
+                command.CommandText = "DELETE FROM tech_permanizes " +
+                    "WHERE permanizes_id=" + original.techID;
+                command.ExecuteNonQuery();
+
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while deleting " +
+                    "connections to the original tech in update " +
+                    "process: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Inserts connections to this tech using the current tech
+        private bool InsertConnectionsToUpdated(List<uint> IsPrereqFor,
+            List<uint> IsGrantreqFor, List<uint> IsPermanizedBy)
+        {
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            connection.Open();
+            try
+            {
+                //Insert prereqs
+                if (IsPrereqFor.Count > 0)
+                {
+                    command.CommandText = "INSERT INTO tech_prereqs " +
+                        "VALUES ";
+                    foreach (uint n in IsPrereqFor)
+                        command.CommandText += "(" + n + "," + current.techID + "),";
+                    command.CommandText = command.CommandText.Trim(',') + ";";
+                    command.ExecuteNonQuery();
+                }
+                //Insert grantreqs
+                if (IsGrantreqFor.Count > 0)
+                {
+                    command.CommandText = "INSERT INTO tech_grantreqs " +
+                        "VALUES ";
+                    foreach (uint n in IsGrantreqFor)
+                        command.CommandText += "(" + n + "," + current.techID + "),";
+                    command.CommandText = command.CommandText.Trim(',') + ";";
+                    command.ExecuteNonQuery();
+                }
+                //Insert permanizes
+                if (IsPermanizedBy.Count > 0)
+                {
+                    command.CommandText = "INSERT INTO tech_permanizes " +
+                        "VALUES ";
+                    foreach (uint n in IsPermanizedBy)
+                        command.CommandText += "(" + n + "," + current.techID + "),";
+                    command.CommandText = command.CommandText.Trim(',') + ";";
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occured while inserting connections " +
+                    "to this tech: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Deletes all prereqs of the current tech
+        public bool DeletePrereqsOfOriginal()
+        {
+            //Note: this function is public so tech list view can call it
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "DELETE FROM tech_prereqs " +
+                "WHERE id=" + original.techID + ";";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "deleting prereqs of original: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Deletes all grantreqs of the current tech
+        public bool DeleteGrantreqsOfOriginal()
+        {
+            //Note: this function is public so tech list view can call it
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "DELETE FROM tech_grantreqs " +
+                "WHERE id=" + original.techID + ";";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "deleting grantreqs of original: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
+        }
+        //Deletes all permanizes relationships of the original tech
+        public bool DeletePermanizesOfOriginal()
+        {
+            //Note: this function is public so tech list view can call it
+            bool success = true;
+            MySqlCommand command = new MySqlCommand();
+            command.Connection = connection;
+            command.CommandText = "DELETE FROM tech_permanizes " +
+                "WHERE id=" + original.techID + ";";
+            try
+            {
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+            catch (MySqlException ex)
+            {
+                techListView.Log("An error occurred while " +
+                    "deleting permanizes of original: " + ex.Message);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return success;
         }
 
         //*********************************************************************
@@ -774,6 +1469,7 @@ namespace TechTreeEditor
                     //Remove all non-hex characters
                     if (IDRgx.IsMatch(IDInput.Text.Substring(i, 1)))
                         IDInput.Text = IDInput.Text.Substring(0, i) + IDInput.Text.Substring(i + 1);
+                    else i++;
                 }
             }
             current.techID = HexConverter.HexToInt(IDInput.Text);
@@ -828,15 +1524,36 @@ namespace TechTreeEditor
         }
         private void RemovePrereqButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            if (PrereqsListBox.SelectedIndex >= 0)
+            {
+                string idString = PrereqsListBox.Items[PrereqsListBox.SelectedIndex] as string;
+                idString = idString.Substring(0, 8);
+                current.techPrereqs.Remove(HexConverter.HexToInt(idString));
+                current.CheckPrereqsChanged(original);
+                PopulatePrereqs();
+            }
         }
         private void RemoveGrantreqButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            if (GrantreqsListBox.SelectedIndex >= 0)
+            {
+                string idString = GrantreqsListBox.Items[GrantreqsListBox.SelectedIndex] as string;
+                idString = idString.Substring(0, 8);
+                current.techGrantreqs.Remove(HexConverter.HexToInt(idString));
+                current.CheckGrantreqsChanged(original);
+                PopulateGrantreqs();
+            }
         }
         private void RemovePermanizesButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            if (PermanizesListBox.SelectedIndex >= 0)
+            {
+                string idString = PermanizesListBox.Items[PermanizesListBox.SelectedIndex] as string;
+                idString = idString.Substring(0, 8);
+                current.techPermanizes.Remove(HexConverter.HexToInt(idString));
+                current.CheckPermanizesChanged(original);
+                PopulatePermanizes();
+            }
         }
         private void SaveButton_Click(object sender, EventArgs e)
         {
@@ -846,12 +1563,12 @@ namespace TechTreeEditor
             }
             else if (Mode == ViewMode.EDITING)
             {
-                //TODO
+                EditTech();
             }
         }
         private void RevertButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            Revert();
         }
         private void TechEditView_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -867,7 +1584,7 @@ namespace TechTreeEditor
                 if (result == DialogResult.Cancel)
                     e.Cancel = true;
             }
-            else if (Mode == ViewMode.EDITING)
+            else if (Mode == ViewMode.EDITING && current.AnyAreChanged())
             {
                 message = "Save changes before closing?";
                 caption = "Unsaved Changes on Form";
@@ -887,9 +1604,50 @@ namespace TechTreeEditor
         {
             //TODO
         }
+        private void DebugDisplayDataButton_Click(object sender, EventArgs e)
+        {
+            string dataView = "Show data request received.\r\n" +
+                "  Original, Current, changed\r\n" +
+                "    " + original.techID + ", " + current.techID + ", " + current.techIDChanged.ToString() + "\r\n" +
+                "    " + original.techName + ", " + current.techName + ", " + current.techNameChanged.ToString() + "\r\n" +
+                "    " + original.techCategory + ", " + current.techCategory + ", " + current.techCategoryChanged.ToString() + "\r\n" +
+                "    " + original.techFieldName + ", " + current.techFieldName + ", " + current.techFieldNameChanged.ToString() + "\r\n" +
+                "     (cost per day) " + original.techCostPerDay + ", " + current.techCostPerDay + ", " + current.techCostPerDayChanged.ToString() + "\r\n" +
+                "     (number days)  " + original.techNumberDays + ", " + current.techNumberDays + ", " + current.techNumberDaysChanged.ToString() + "\r\n";
+            dataView += "    Original prereqs: ";
+            foreach (uint id in original.techPrereqs) dataView += HexConverter.IntToHex(id) + ", ";
+            dataView += "\r\n    Current prereqs: ";
+            foreach (uint id in current.techPrereqs) dataView += HexConverter.IntToHex(id) + ", ";
+            dataView += "\r\n    Prereqs changed: " + current.techPrereqsChanged.ToString() + "\r\n";
+            dataView += "    Original grantreqs: ";
+            foreach (uint id in original.techGrantreqs) dataView += HexConverter.IntToHex(id) + ", ";
+            dataView += "\r\n    Current grantreqs: ";
+            foreach (uint id in current.techGrantreqs) dataView += HexConverter.IntToHex(id) + ", ";
+            dataView += "\r\n    Grantreqs changed: " + current.techGrantreqsChanged.ToString() + "\r\n";
+            dataView += "    Original permanizes: ";
+            foreach (uint id in original.techPermanizes) dataView += HexConverter.IntToHex(id) + ", ";
+            dataView += "\r\n    Current permanizes: ";
+            foreach (uint id in current.techPermanizes) dataView += HexConverter.IntToHex(id) + ", ";
+            dataView += "\r\n    Permanizes changed: " + current.techPermanizesChanged.ToString() + "\r\n";
+            techListView.Log(dataView);
+        }
+        private void SaveAndCloseButton_Click(object sender, EventArgs e)
+        {
+            SaveButton_Click(sender, e);
+            techListView.CloseEditView(EditViewID);
+            Dispose();
+        }
         private void AlwaysViewSelectedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            //TODO
+            if (AlwaysViewSelectedCheckBox.Checked)
+            {
+                techListView.observers.Add(this);
+                ViewTech(techListView.SelectedTechID);
+            }
+            else
+            {
+                techListView.observers.Remove(this);
+            }
         }
 
 

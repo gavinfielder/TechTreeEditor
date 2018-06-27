@@ -57,6 +57,9 @@ namespace TechTreeEditor
             }
         }
 
+        //Stores observer views of the currently selected tech
+        public List<TechEditView> observers;
+
         //*********************************************************************
         //*************************** Basic Methods ***************************
         //*********************************************************************
@@ -78,6 +81,7 @@ namespace TechTreeEditor
             currentFilters.nameString = "";
             currentFilters.fieldName = "";
             currentFilters.category = "";
+            observers = new List<TechEditView>();
         }
         ~TechListView()
         {
@@ -98,7 +102,7 @@ namespace TechTreeEditor
         {
             LogDisplay.AppendText(message + "\r\n");
         }
-
+        
         //*********************************************************************
         //************************** Form Operations **************************
         //*********************************************************************
@@ -138,6 +142,14 @@ namespace TechTreeEditor
             openEditViews[viewIndex].AddGrantreq(id);
         }
 
+        //Refreshes the list view
+        public void RefreshList()
+        {
+            FetchTechList(currentFilters);
+        }
+
+
+
         //*********************************************************************
         //************************** Event Handlers ***************************
         //*********************************************************************
@@ -157,7 +169,7 @@ namespace TechTreeEditor
         }
         private void DeleteTechButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            DeleteSelectedTech();
         }
         private void UpdateFiltersButton_Click(object sender, EventArgs e)
         {
@@ -195,7 +207,7 @@ namespace TechTreeEditor
         }
         private void EditTechButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            OpenEditView(TechEditView.ViewMode.EDITING, SelectedTechID);
         }
         private void ViewTechButton_Click(object sender, EventArgs e)
         {
@@ -269,7 +281,36 @@ namespace TechTreeEditor
         }
         private void AddPermanizesButton_Click(object sender, EventArgs e)
         {
-            //TODO
+            int views = NumberOfOpenEditingViews;
+            if (views == 0) return;
+            if (views == 1)
+            {
+                int viewIndex = -1;
+                //Find the view that's in add or edit mode
+                for (int j = 0; j < openEditViews.Count; j++)
+                {
+                    if (openEditViews[j].Mode == TechEditView.ViewMode.ADDING_NEW ||
+                        openEditViews[j].Mode == TechEditView.ViewMode.EDITING)
+                    {
+                        viewIndex = j;
+                        break;
+                    }
+                }
+                openEditViews[viewIndex].AddPermanizes(SelectedTechID);
+                openEditViews[viewIndex].Activate();
+            }
+            else
+            {
+                //Multiple editing views are open. Pass to the editing form selector dialog
+                EditViewSelector selector = new EditViewSelector(ref openEditViews);
+                selector.ShowDialog(this);
+                if (selector.SelectedViewIndex != -1)
+                {
+                    openEditViews[selector.SelectedViewIndex].AddPermanizes(SelectedTechID);
+                    openEditViews[selector.SelectedViewIndex].Activate();
+                }
+                selector.Dispose();
+            }
         }
         private void TechListGrid_SelectionChanged(object sender, EventArgs e)
         {
@@ -283,6 +324,8 @@ namespace TechTreeEditor
                 AddPrereqButton.Enabled = true;
                 AddGrantreqButton.Enabled = true;
                 AddPermanizesButton.Enabled = true;
+                for (int i = 0; i < observers.Count; i++)
+                    observers[i].ViewTech(SelectedTechID);
             }
             else
             {
@@ -559,6 +602,37 @@ namespace TechTreeEditor
                 Log("Fetched " + rowsFetched + " records.");
             }
 
+        }
+        private void DeleteSelectedTech()
+        {
+            if (SelectedTechID == 0) return;
+            DialogResult result = MessageBox.Show(
+                this, "Are you sure you wish to delete this tech " +
+                "and all of its connections?", "Confirm Tech Deletion",
+                MessageBoxButtons.OKCancel);
+            if (result == DialogResult.Cancel) return;
+            TechEditView deletor = new TechEditView(
+                99999, SelectedTechID, TechEditView.ViewMode.EDITING);
+            deletor.techListView = this;
+            bool success = true;
+            success &= deletor.DeletePrereqsOfOriginal();
+            success &= deletor.DeleteGrantreqsOfOriginal();
+            success &= deletor.DeletePermanizesOfOriginal();
+            success &= deletor.DeletePrereqs();
+            success &= deletor.DeleteGrantreqs();
+            success &= deletor.DeletePermanizes();
+            success &= deletor.DeleteOriginalTech();
+            if (success)
+            {
+                Log("Tech deleted: " + HexConverter.IntToHex(SelectedTechID));
+            }
+            else
+            {
+                Log("Error(s) encountered during tech deletion. Check " +
+                    "integrity of id " + HexConverter.IntToHex(SelectedTechID));
+            }
+            deletor.Dispose();
+            RefreshList();
         }
         
 
