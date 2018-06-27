@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Devart.Data.MySql;
 using System.Text.RegularExpressions;
+using System.IO;
+
 
 namespace TechTreeEditor
 {
@@ -102,9 +104,27 @@ namespace TechTreeEditor
         }
 
         //Adds a message to the log
-        public void Log(string message)
+        public void Log(string message, string associatedCommand = "")
         {
             LogDisplay.AppendText(message + "\r\n");
+            WriteToLogFile(message, associatedCommand);
+        }
+        //Adds a message to the log file but doesn't print to display
+        public void QuietLog(string message, string associatedCommand = "")
+        {
+            WriteToLogFile(message, associatedCommand);
+        }
+        //Writes to the log file
+        private void WriteToLogFile(string message, string associatedCommand = "")
+        {
+            string line = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss");
+            line += ": " + message;
+            if (associatedCommand != "")
+                line += "\r\n    Associated command: \"" + associatedCommand + "\"";
+            StreamWriter fout = new StreamWriter(
+                Directory.GetCurrentDirectory() + "\\log.txt", true);
+            fout.WriteLine(line);
+            fout.Close();
         }
         
         //*********************************************************************

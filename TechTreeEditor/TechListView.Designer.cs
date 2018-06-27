@@ -70,7 +70,7 @@
             this.LogGroupBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.LogGroupBox.Controls.Add(this.LogDisplay);
-            this.LogGroupBox.Location = new System.Drawing.Point(12, 380);
+            this.LogGroupBox.Location = new System.Drawing.Point(12, 373);
             this.LogGroupBox.Name = "LogGroupBox";
             this.LogGroupBox.Size = new System.Drawing.Size(744, 116);
             this.LogGroupBox.TabIndex = 0;
@@ -111,7 +111,7 @@
             this.TechListGrid.ReadOnly = true;
             this.TechListGrid.RowHeadersVisible = false;
             this.TechListGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.TechListGrid.Size = new System.Drawing.Size(641, 285);
+            this.TechListGrid.Size = new System.Drawing.Size(641, 278);
             this.TechListGrid.TabIndex = 1;
             this.TechListGrid.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.TechListGrid_CellDoubleClick);
             this.TechListGrid.SelectionChanged += new System.EventHandler(this.TechListGrid_SelectionChanged);
@@ -157,7 +157,7 @@
             this.TechListGroupBox.Controls.Add(this.TechListGrid);
             this.TechListGroupBox.Location = new System.Drawing.Point(12, 12);
             this.TechListGroupBox.Name = "TechListGroupBox";
-            this.TechListGroupBox.Size = new System.Drawing.Size(653, 362);
+            this.TechListGroupBox.Size = new System.Drawing.Size(653, 355);
             this.TechListGroupBox.TabIndex = 2;
             this.TechListGroupBox.TabStop = false;
             this.TechListGroupBox.Text = "Tech List";
@@ -298,7 +298,7 @@
             // 
             this.ShowTablesButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.ShowTablesButton.Enabled = false;
-            this.ShowTablesButton.Location = new System.Drawing.Point(671, 351);
+            this.ShowTablesButton.Location = new System.Drawing.Point(671, 344);
             this.ShowTablesButton.Name = "ShowTablesButton";
             this.ShowTablesButton.Size = new System.Drawing.Size(86, 23);
             this.ShowTablesButton.TabIndex = 6;
@@ -311,7 +311,7 @@
             // 
             this.InitializeDatabaseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.InitializeDatabaseButton.Enabled = false;
-            this.InitializeDatabaseButton.Location = new System.Drawing.Point(671, 322);
+            this.InitializeDatabaseButton.Location = new System.Drawing.Point(671, 315);
             this.InitializeDatabaseButton.Name = "InitializeDatabaseButton";
             this.InitializeDatabaseButton.Size = new System.Drawing.Size(86, 23);
             this.InitializeDatabaseButton.TabIndex = 7;
@@ -368,7 +368,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(768, 508);
+            this.ClientSize = new System.Drawing.Size(768, 501);
             this.Controls.Add(this.ViewTechButton);
             this.Controls.Add(this.AddPermanizesButton);
             this.Controls.Add(this.AddGrantreqButton);
