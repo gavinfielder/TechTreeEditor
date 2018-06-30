@@ -184,7 +184,7 @@
             this.FieldNameInput.MaxLength = 32;
             this.FieldNameInput.Name = "FieldNameInput";
             this.FieldNameInput.Size = new System.Drawing.Size(243, 20);
-            this.FieldNameInput.TabIndex = 13;
+            this.FieldNameInput.TabIndex = 6;
             this.FieldNameInput.TextChanged += new System.EventHandler(this.FieldNameInput_TextChanged);
             // 
             // CostPerDayInput
@@ -192,7 +192,7 @@
             this.CostPerDayInput.Location = new System.Drawing.Point(82, 43);
             this.CostPerDayInput.Name = "CostPerDayInput";
             this.CostPerDayInput.Size = new System.Drawing.Size(106, 20);
-            this.CostPerDayInput.TabIndex = 14;
+            this.CostPerDayInput.TabIndex = 3;
             this.CostPerDayInput.Text = "0.0";
             this.CostPerDayInput.Leave += new System.EventHandler(this.CostPerDayInput_Leave);
             // 
@@ -201,7 +201,7 @@
             this.NumberDaysInput.Location = new System.Drawing.Point(82, 70);
             this.NumberDaysInput.Name = "NumberDaysInput";
             this.NumberDaysInput.Size = new System.Drawing.Size(106, 20);
-            this.NumberDaysInput.TabIndex = 15;
+            this.NumberDaysInput.TabIndex = 5;
             this.NumberDaysInput.Text = "0.0";
             this.NumberDaysInput.Leave += new System.EventHandler(this.NumberDaysInput_Leave);
             // 
@@ -260,7 +260,7 @@
             this.CategoryComboBox.Location = new System.Drawing.Point(270, 43);
             this.CategoryComboBox.Name = "CategoryComboBox";
             this.CategoryComboBox.Size = new System.Drawing.Size(243, 21);
-            this.CategoryComboBox.TabIndex = 21;
+            this.CategoryComboBox.TabIndex = 4;
             this.CategoryComboBox.SelectedIndexChanged += new System.EventHandler(this.CategoryComboBox_SelectedIndexChanged);
             // 
             // SaveButton
@@ -268,7 +268,7 @@
             this.SaveButton.Location = new System.Drawing.Point(12, 449);
             this.SaveButton.Name = "SaveButton";
             this.SaveButton.Size = new System.Drawing.Size(88, 29);
-            this.SaveButton.TabIndex = 22;
+            this.SaveButton.TabIndex = 7;
             this.SaveButton.Text = "Save";
             this.SaveButton.UseVisualStyleBackColor = true;
             this.SaveButton.Click += new System.EventHandler(this.SaveButton_Click);
@@ -287,7 +287,7 @@
             this.RevertButton.Location = new System.Drawing.Point(310, 449);
             this.RevertButton.Name = "RevertButton";
             this.RevertButton.Size = new System.Drawing.Size(88, 29);
-            this.RevertButton.TabIndex = 24;
+            this.RevertButton.TabIndex = 8;
             this.RevertButton.Text = "Revert";
             this.RevertButton.UseVisualStyleBackColor = true;
             this.RevertButton.Click += new System.EventHandler(this.RevertButton_Click);
@@ -440,7 +440,7 @@
             this.SaveAndCloseButton.Location = new System.Drawing.Point(12, 484);
             this.SaveAndCloseButton.Name = "SaveAndCloseButton";
             this.SaveAndCloseButton.Size = new System.Drawing.Size(88, 29);
-            this.SaveAndCloseButton.TabIndex = 37;
+            this.SaveAndCloseButton.TabIndex = 9;
             this.SaveAndCloseButton.Text = "Save + Close";
             this.SaveAndCloseButton.UseVisualStyleBackColor = true;
             this.SaveAndCloseButton.Visible = false;

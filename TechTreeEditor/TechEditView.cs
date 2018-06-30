@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace TechTreeEditor
 {
-    public partial class TechEditView : Form
+    public partial class TechEditView : Form, IObserver<uint>
     {
         //*********************************************************************
         //*************************** Data Structures *************************
@@ -1751,18 +1751,31 @@ namespace TechTreeEditor
         }
         private void AlwaysViewSelectedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
+            techListView.Subscribe(this);
+            /* TODO: It'd be nice to get validation a la below back:
             if (AlwaysViewSelectedCheckBox.Checked)
             {
-                techListView.observers.Add(this);
-                ViewTech(techListView.SelectedTechID);
+                //Subscribe
             }
             else
             {
-                techListView.observers.Remove(this);
-            }
+                //Unsubscribe
+            }*/
         }
 
+        //Observer functions
+        public void OnNext(uint id)
+        {
+            ViewTech(id);
+        }
+        public void OnError(Exception ex)
+        {
+            techListView.Log("An unknown error occurred in TechEditView.OnError: " + ex.Message);
+        }
+        public void OnCompleted()
+        {
 
+        }
 
     }
 }

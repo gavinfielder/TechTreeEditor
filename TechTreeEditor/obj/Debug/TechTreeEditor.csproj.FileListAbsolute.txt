@@ -15,3 +15,4 @@ C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Deb
 C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.TechListView.resources
 C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.TechEditView.resources
 C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.EditViewSelector.resources
+C:\Users\gavin\Documents\Hammer\Summer2018\TechTreeEditor\TechTreeEditor\obj\Debug\TechTreeEditor.GraphView.resources

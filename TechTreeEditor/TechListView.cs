@@ -15,7 +15,7 @@ using System.IO;
 
 namespace TechTreeEditor
 {
-    public partial class TechListView : Form
+    public partial class TechListView : Form, IObservable<uint>
     {
         //*********************************************************************
         //************************** Data Structures **************************
@@ -33,6 +33,7 @@ namespace TechTreeEditor
         }
         private FilterOptions currentFilters;
         private Regex IDRgx; //matches if invalid hex string
+        GraphView graphView;
 
         //Returns the number of open tech edit views that are in Edit or Add mode
         public int NumberOfOpenEditingViews
@@ -62,7 +63,7 @@ namespace TechTreeEditor
         }
 
         //Stores observer views of the currently selected tech
-        public List<TechEditView> observers;
+        private List<IObserver<uint>> observers;
 
         //*********************************************************************
         //*************************** Basic Methods ***************************
@@ -85,9 +86,11 @@ namespace TechTreeEditor
             currentFilters.nameString = "";
             currentFilters.fieldName = "";
             currentFilters.category = "";
-            observers = new List<TechEditView>();
+            observers = new List<IObserver<uint>>();
             LoadCategories();
             IDRgx = new Regex(@"[^0123456789ABCDEFabcdef]");
+            graphView = new GraphView(this);
+            graphView.Visible = true;
         }
         ~TechListView()
         {
@@ -172,6 +175,13 @@ namespace TechTreeEditor
             FetchTechList(currentFilters);
         }
 
+        //Subscribes an observer to this form
+        public IDisposable Subscribe(IObserver<uint> requestor)
+        {
+            if (!observers.Contains(requestor))
+                observers.Add(requestor);
+            return new Unsubscriber(observers, requestor);
+        }
 
 
         //*********************************************************************
@@ -383,7 +393,7 @@ namespace TechTreeEditor
                 AddGrantreqButton.Enabled = true;
                 AddPermanizesButton.Enabled = true;
                 for (int i = 0; i < observers.Count; i++)
-                    observers[i].ViewTech(SelectedTechID);
+                    observers[i].OnNext(SelectedTechID);
             }
             else
             {
@@ -767,6 +777,28 @@ namespace TechTreeEditor
             }
         }
 
+        
+        //*********************************************************************
+        //************ Needed by this particular observer pattern *************
+        //*********************************************************************
 
+        //code adapted from MSDN: IObservable<T> Interface
+        private class Unsubscriber : IDisposable
+        {
+            private List<IObserver<uint>> _observers;
+            private IObserver<uint> _observer;
+
+            public Unsubscriber(List<IObserver<uint>> observers, IObserver<uint> observer)
+            {
+                this._observers = observers;
+                this._observer = observer;
+            }
+
+            public void Dispose()
+            {
+                if (_observer != null && _observers.Contains(_observer))
+                    _observers.Remove(_observer);
+            }
+        }
     }
 }
