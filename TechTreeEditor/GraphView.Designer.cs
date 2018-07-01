@@ -43,6 +43,7 @@
             this.picBox.Size = new System.Drawing.Size(510, 437);
             this.picBox.TabIndex = 0;
             this.picBox.TabStop = false;
+            this.picBox.MouseClick += new System.Windows.Forms.MouseEventHandler(this.picBox_MouseClick);
             // 
             // bgWorker
             // 
@@ -55,7 +56,7 @@
             this.ClientSize = new System.Drawing.Size(534, 461);
             this.Controls.Add(this.picBox);
             this.Name = "GraphView";
-            this.Text = "GraphView";
+            this.Text = "Local Graph";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GraphView_FormClosing);
             this.ResizeEnd += new System.EventHandler(this.GraphView_ResizeEnd);
             ((System.ComponentModel.ISupportInitialize)(this.picBox)).EndInit();

@@ -596,6 +596,7 @@ namespace TechTreeEditor
             original.Copy(current);
             UpdateTitleBar();
             techListView.RefreshList();
+            techListView.Select(current.techID);
         }
         //Adds a new tech
         private void AddTech()
@@ -622,6 +623,7 @@ namespace TechTreeEditor
             techListView.Log("Tech added: " + current.techName +
                "(" + HexConverter.IntToHex(current.techID) + ")");
             techListView.RefreshList();
+            techListView.Select(current.techID);
         }
         
         //*********************************************************************

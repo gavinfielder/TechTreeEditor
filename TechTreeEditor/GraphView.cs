@@ -605,7 +605,7 @@ namespace TechTreeEditor
             graphics.Dispose();
             graphics = picBox.CreateGraphics();
         }
-
+        
         //*********************************************************************
         //***************** Graph Arrangement and Rendering *******************
         //*********************************************************************
@@ -966,6 +966,38 @@ namespace TechTreeEditor
         {
             uint id = (uint)(e.Argument);
             ViewTech(id);
+        }
+
+        //Processes a click event in the graph
+        private void picBox_MouseClick(object sender, MouseEventArgs e)
+        {
+            //Don't process if the form is busy loading a new tech
+            if (bgWorker.IsBusy) return;
+            uint clickedID = 0;
+            //Check if the user clicked a node
+            if (nodes != null) {
+                for (int i = 0; i < nodes.Count; i++)
+                {
+                    if (nodes[i].boundingBox.Contains(e.X, e.Y))
+                    {
+                        //User clicked this node.
+                        clickedID = nodes[i].id;
+                        break;
+                    }
+                }
+            }
+            if (clickedID > 0)
+            {
+                bool success = techListView.Select(clickedID);
+                if (!(success))
+                {
+                    //The tech was not found in the current list view, but 
+                    //display the requested tech in the graph view anyway.
+                    //The following call emulates the list view selecting
+                    //this tech, thus triggering a new view:
+                    Notify(clickedID);
+                }
+            }
         }
     }
 }

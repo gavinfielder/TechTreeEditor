@@ -120,10 +120,11 @@ namespace TechTreeEditor
         //************************** Form Operations **************************
         //*********************************************************************
 
-        //Finds a tech in the current view and selects it
-        public void Select(uint id)
+        //Finds a tech in the current view and selects it. REturns true if selected
+        public bool Select(uint id)
         {
             int rows = TechListGrid.Rows.Count;
+            if (rows == 0) return false;
             int a = 0;
             int b = rows - 1;
             int c = (b - a) / 2;
@@ -149,7 +150,10 @@ namespace TechTreeEditor
                 //Found. Select the tech found at row c
                 TechListGrid.ClearSelection();
                 TechListGrid.Rows[c].Selected = true;
+                TechListGrid.FirstDisplayedScrollingRowIndex = c;
+                return true;
             }
+            return false;
         }
 
         //Open or closes a new tech edit view
