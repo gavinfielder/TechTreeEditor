@@ -21,6 +21,8 @@ namespace TechTreeEditor
         private Graphics graphics;
         private TechListView techListView;
         private MySqlConnection connection;
+        private DateTime lastView;
+        private const double MIN_VIEWTECH_INTERVAL = 1.0; //seconds
 
         //Graphics
         public class GraphNodeStyle
@@ -483,6 +485,7 @@ namespace TechTreeEditor
             edges = new List<GraphEdge>();
             techListView.Subscribe(this);
             graphics = picBox.CreateGraphics();
+            lastView = DateTime.Now;
     }
         ~GraphView()
         {
@@ -504,6 +507,8 @@ namespace TechTreeEditor
         //Focuses the graph view on the given id
         public void ViewTech(uint id)
         {
+            if ((DateTime.Now - lastView).TotalSeconds < MIN_VIEWTECH_INTERVAL) return;
+            lastView = DateTime.Now;
             Clear();
             ClearData();
             techID = id;
@@ -580,8 +585,8 @@ namespace TechTreeEditor
         public void Clear()
         {
             graphics.Clear(Color.White);
-            //graphics.Dispose();
-            //graphics = picBox.CreateGraphics();
+            graphics.Dispose();
+            graphics = picBox.CreateGraphics();
         }
 
         //*********************************************************************
@@ -735,6 +740,7 @@ namespace TechTreeEditor
             command.Connection = connection;
             command.CommandText = "SELECT prereq_id FROM tech_prereqs " +
                 "WHERE id=" + techID + ";";
+            command.CommandTimeout = 2;
             MySqlDataReader reader;
             connection.Open();
             try
@@ -761,6 +767,7 @@ namespace TechTreeEditor
             command.Connection = connection;
             command.CommandText = "SELECT grantreq_id FROM tech_grantreqs " +
                 "WHERE id=" + techID + ";";
+            command.CommandTimeout = 2;
             MySqlDataReader reader;
             connection.Open();
             try
@@ -787,6 +794,7 @@ namespace TechTreeEditor
             command.Connection = connection;
             command.CommandText = "SELECT id FROM tech_prereqs " +
                 "WHERE prereq_id=" + techID + ";";
+            command.CommandTimeout = 2;
             MySqlDataReader reader;
             connection.Open();
             try
@@ -813,6 +821,7 @@ namespace TechTreeEditor
             command.Connection = connection;
             command.CommandText = "SELECT id FROM tech_grantreqs " +
                 "WHERE grantreq_id=" + techID + ";";
+            command.CommandTimeout = 2;
             MySqlDataReader reader;
             connection.Open();
             try
@@ -839,6 +848,7 @@ namespace TechTreeEditor
             command.Connection = connection;
             command.CommandText = "SELECT id FROM tech_permanizes " +
                 "WHERE permanizes_id=" + techID + ";";
+            command.CommandTimeout = 2;
             MySqlDataReader reader;
             connection.Open();
             try
