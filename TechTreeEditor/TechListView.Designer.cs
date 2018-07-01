@@ -58,6 +58,7 @@
             this.AddGrantreqButton = new System.Windows.Forms.Button();
             this.AddPermanizesButton = new System.Windows.Forms.Button();
             this.ViewTechButton = new System.Windows.Forms.Button();
+            this.ViewGraphButton = new System.Windows.Forms.Button();
             this.LogGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TechListGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.hammertechtreedbDataSetBindingSource)).BeginInit();
@@ -364,11 +365,22 @@
             this.ViewTechButton.UseVisualStyleBackColor = true;
             this.ViewTechButton.Click += new System.EventHandler(this.ViewTechButton_Click);
             // 
+            // ViewGraphButton
+            // 
+            this.ViewGraphButton.Location = new System.Drawing.Point(671, 24);
+            this.ViewGraphButton.Name = "ViewGraphButton";
+            this.ViewGraphButton.Size = new System.Drawing.Size(85, 35);
+            this.ViewGraphButton.TabIndex = 12;
+            this.ViewGraphButton.Text = "Reload Graph View";
+            this.ViewGraphButton.UseVisualStyleBackColor = true;
+            this.ViewGraphButton.Click += new System.EventHandler(this.ViewGraphButton_Click);
+            // 
             // TechListView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(768, 501);
+            this.Controls.Add(this.ViewGraphButton);
             this.Controls.Add(this.ViewTechButton);
             this.Controls.Add(this.AddPermanizesButton);
             this.Controls.Add(this.AddGrantreqButton);
@@ -424,5 +436,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn id;
         private System.Windows.Forms.DataGridViewTextBoxColumn name;
         private System.Windows.Forms.DataGridViewTextBoxColumn category;
+        private System.Windows.Forms.Button ViewGraphButton;
     }
 }

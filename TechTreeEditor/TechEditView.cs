@@ -12,7 +12,7 @@ using System.Text.RegularExpressions;
 
 namespace TechTreeEditor
 {
-    public partial class TechEditView : Form, IObserver<uint>
+    public partial class TechEditView : Form, Observer
     {
         //*********************************************************************
         //*************************** Data Structures *************************
@@ -271,6 +271,12 @@ namespace TechTreeEditor
             else if (Mode == ViewMode.EDITING)
                 Text = "Editing Tech: " + original.techName + " (" +
                     HexConverter.IntToHex(original.techID) + ")";
+        }
+
+        //Receives notification when new tech selected in tech list view
+        public void Notify(uint id)
+        {
+            ViewTech(id);
         }
 
         //*********************************************************************
@@ -1751,31 +1757,15 @@ namespace TechTreeEditor
         }
         private void AlwaysViewSelectedCheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            techListView.Subscribe(this);
-            /* TODO: It'd be nice to get validation a la below back:
             if (AlwaysViewSelectedCheckBox.Checked)
             {
-                //Subscribe
+                techListView.AddObserver(this);
             }
             else
             {
-                //Unsubscribe
-            }*/
+                techListView.RemoveObserver(this);
+            }
         }
-
-        //Observer functions
-        public void OnNext(uint id)
-        {
-            ViewTech(id);
-        }
-        public void OnError(Exception ex)
-        {
-            techListView.Log("An unknown error occurred in TechEditView.OnError: " + ex.Message);
-        }
-        public void OnCompleted()
-        {
-
-        }
-
+        
     }
 }

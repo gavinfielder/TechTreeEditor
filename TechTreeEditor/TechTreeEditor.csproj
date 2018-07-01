@@ -66,6 +66,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>hammertechtreedbDataSet.xsd</DependentUpon>
     </Compile>
+    <Compile Include="ObserverPattern.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TechEditView.cs">

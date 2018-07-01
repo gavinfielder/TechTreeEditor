@@ -15,7 +15,7 @@ using System.IO;
 
 namespace TechTreeEditor
 {
-    public partial class TechListView : Form, IObservable<uint>
+    public partial class TechListView : Form, Observable
     {
         //*********************************************************************
         //************************** Data Structures **************************
@@ -33,7 +33,7 @@ namespace TechTreeEditor
         }
         private FilterOptions currentFilters;
         private Regex IDRgx; //matches if invalid hex string
-        GraphView graphView;
+        private GraphView graphView;
 
         //Returns the number of open tech edit views that are in Edit or Add mode
         public int NumberOfOpenEditingViews
@@ -63,7 +63,7 @@ namespace TechTreeEditor
         }
 
         //Stores observer views of the currently selected tech
-        private List<IObserver<uint>> observers;
+        private List<Observer> observers;
 
         //*********************************************************************
         //*************************** Basic Methods ***************************
@@ -86,24 +86,10 @@ namespace TechTreeEditor
             currentFilters.nameString = "";
             currentFilters.fieldName = "";
             currentFilters.category = "";
-            observers = new List<IObserver<uint>>();
+            observers = new List<Observer>();
             LoadCategories();
             IDRgx = new Regex(@"[^0123456789ABCDEFabcdef]");
-            graphView = new GraphView(this);
-            graphView.Visible = true;
-        }
-        ~TechListView()
-        {
-            EndDatabaseSession();
-        }
-
-        //Connection management
-        private void EndDatabaseSession()
-        {
-            if (connection.State == ConnectionState.Open)
-            {
-                connection.Close();
-            }
+            OpenGraphView();
         }
 
         //Adds a message to the log
@@ -134,6 +120,38 @@ namespace TechTreeEditor
         //************************** Form Operations **************************
         //*********************************************************************
 
+        //Finds a tech in the current view and selects it
+        public void Select(uint id)
+        {
+            int rows = TechListGrid.Rows.Count;
+            int a = 0;
+            int b = rows - 1;
+            int c = (b - a) / 2;
+            uint current = HexConverter.HexToInt(TechListGrid.Rows[c].Cells[0].Value as string);
+            while ((current != id) && (b - a > 1))
+            {
+                current = HexConverter.HexToInt(TechListGrid.Rows[c].Cells[0].Value as string);
+                if (id > current)
+                {
+                    //upper range selected for further search
+                    a = c;
+                    c = a + (b - a) / 2;
+                }
+                else if (id < current)
+                {
+                    //lower range selected for further search
+                    b = c;
+                    c = a + (b - a) / 2;
+                }
+            }
+            if (id == current)
+            {
+                //Found. Select the tech found at row c
+                TechListGrid.ClearSelection();
+                TechListGrid.Rows[c].Selected = true;
+            }
+        }
+
         //Open or closes a new tech edit view
         private void OpenEditView(TechEditView.ViewMode mode, uint id = 0)
         {
@@ -158,6 +176,24 @@ namespace TechTreeEditor
             }
         }
 
+        //Opens or closes the Graph View
+        private void OpenGraphView()
+        {
+            if (graphView == null)
+            {
+                graphView = new GraphView(this);
+                graphView.Visible = true;
+            }
+        }
+        private void CloseGraphView()
+        {
+            if (graphView != null)
+            {
+                graphView.Close();
+                graphView = null;
+            }
+        }
+
         //Adds the requested prereq to the requested form
         public void AddPrereqToEditForm(int viewIndex, uint id)
         {
@@ -175,12 +211,15 @@ namespace TechTreeEditor
             FetchTechList(currentFilters);
         }
 
-        //Subscribes an observer to this form
-        public IDisposable Subscribe(IObserver<uint> requestor)
+        //Add or remove observers
+        public void AddObserver(Observer obs)
         {
-            if (!observers.Contains(requestor))
-                observers.Add(requestor);
-            return new Unsubscriber(observers, requestor);
+            if (!observers.Contains(obs))
+                observers.Add(obs);
+        }
+        public void RemoveObserver(Observer obs)
+        {
+            observers.Remove(obs);
         }
 
 
@@ -393,7 +432,7 @@ namespace TechTreeEditor
                 AddGrantreqButton.Enabled = true;
                 AddPermanizesButton.Enabled = true;
                 for (int i = 0; i < observers.Count; i++)
-                    observers[i].OnNext(SelectedTechID);
+                    observers[i].Notify(SelectedTechID);
             }
             else
             {
@@ -456,6 +495,11 @@ namespace TechTreeEditor
         private void TechListGrid_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             ViewTechButton_Click(sender, e);
+        }
+        private void ViewGraphButton_Click(object sender, EventArgs e)
+        {
+            CloseGraphView();
+            OpenGraphView();
         }
 
         //*********************************************************************
@@ -709,10 +753,6 @@ namespace TechTreeEditor
             {
                 Log("An error occurred: " + ex.Message);
             }
-            /*catch (Exception ex) //For debug only
-            {
-                Log("An unhandled exception occurred: " + ex.Message);
-            }*/
             finally
             {
                 connection.Close();
@@ -751,8 +791,7 @@ namespace TechTreeEditor
             deletor.Dispose();
             RefreshList();
         }
-        //Populates the categories combo box
-        public void LoadCategories()
+        private void LoadCategories()
         {
             MySqlCommand command = new MySqlCommand();
             command.Connection = connection;
@@ -777,28 +816,7 @@ namespace TechTreeEditor
             }
         }
 
-        
-        //*********************************************************************
-        //************ Needed by this particular observer pattern *************
-        //*********************************************************************
 
-        //code adapted from MSDN: IObservable<T> Interface
-        private class Unsubscriber : IDisposable
-        {
-            private List<IObserver<uint>> _observers;
-            private IObserver<uint> _observer;
 
-            public Unsubscriber(List<IObserver<uint>> observers, IObserver<uint> observer)
-            {
-                this._observers = observers;
-                this._observer = observer;
-            }
-
-            public void Dispose()
-            {
-                if (_observer != null && _observers.Contains(_observer))
-                    _observers.Remove(_observer);
-            }
-        }
     }
 }

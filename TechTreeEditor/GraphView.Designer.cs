@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.picBox = new System.Windows.Forms.PictureBox();
+            this.bgWorker = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.picBox)).BeginInit();
             this.SuspendLayout();
             // 
@@ -43,6 +44,10 @@
             this.picBox.TabIndex = 0;
             this.picBox.TabStop = false;
             // 
+            // bgWorker
+            // 
+            this.bgWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgWorker_DoWork);
+            // 
             // GraphView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -51,6 +56,7 @@
             this.Controls.Add(this.picBox);
             this.Name = "GraphView";
             this.Text = "GraphView";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.GraphView_FormClosing);
             this.ResizeEnd += new System.EventHandler(this.GraphView_ResizeEnd);
             ((System.ComponentModel.ISupportInitialize)(this.picBox)).EndInit();
             this.ResumeLayout(false);
@@ -60,5 +66,6 @@
         #endregion
 
         private System.Windows.Forms.PictureBox picBox;
+        private System.ComponentModel.BackgroundWorker bgWorker;
     }
 }

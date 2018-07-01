@@ -12,7 +12,7 @@ using Devart.Data.MySql;
 
 namespace TechTreeEditor
 {
-    public partial class GraphView : Form, IObserver<uint>
+    public partial class GraphView : Form, Observer
     {
         //*********************************************************************
         //************ Data Structures and their initializors *****************
@@ -21,8 +21,6 @@ namespace TechTreeEditor
         private Graphics graphics;
         private TechListView techListView;
         private MySqlConnection connection;
-        private DateTime lastView;
-        private const double MIN_VIEWTECH_INTERVAL = 1.0; //seconds
 
         //Graphics
         public class GraphNodeStyle
@@ -358,7 +356,11 @@ namespace TechTreeEditor
             public void Draw(ref Graphics g, Point loc)
             {
                 Location = loc;
-                renderer.Draw(ref g, loc, name, permanizes);
+                try
+                {
+                    renderer.Draw(ref g, loc, name, permanizes);
+                }
+                catch (NullReferenceException) { } //occurs when lost connection to database during query
             }
 
             //Gets connection vertex by name
@@ -373,6 +375,7 @@ namespace TechTreeEditor
                     result.Y = Location.Y + C.Y;
                 }
                 catch (KeyNotFoundException) { }
+                catch (NullReferenceException) { } //occurs when lost connection to database during query
                 return result;
             }
 
@@ -400,15 +403,22 @@ namespace TechTreeEditor
                 }
                 catch (MySqlException ex)
                 {
-                    techListView.Log("An error occurred while loading graph node " +
+                    techListView.QuietLog("An error occurred while loading graph node " +
                         "information for id " + id + ": " +
                         ex.Message,command.CommandText);
                     success = false;
                 }
                 catch (KeyNotFoundException)
                 {
-                    techListView.Log("Error: category '" + category + "' not found in " +
+                    techListView.QuietLog("Error: category '" + category + "' not found in " +
                         "GraphNodeStyles dictionary.");
+                    success = false;
+                }
+                catch (Exception ex) //Diaper handling because this function typically runs asynchronously
+                {
+                    techListView.QuietLog("An unknown error occurred while loading " +
+                        "graph node information for id " + id + ": " +
+                        ex.Message, command.CommandText);
                     success = false;
                 }
                 finally
@@ -462,6 +472,7 @@ namespace TechTreeEditor
         //************************** Basic Functions **************************
         //*********************************************************************
         
+        //Constructor
         public GraphView(TechListView listView)
         {
             InitializeComponent();
@@ -483,9 +494,8 @@ namespace TechTreeEditor
             prereqForNodes = new List<GraphNode>();
             grantreqForNodes = new List<GraphNode>();
             edges = new List<GraphEdge>();
-            techListView.Subscribe(this);
+            techListView.AddObserver(this);
             graphics = picBox.CreateGraphics();
-            lastView = DateTime.Now;
     }
         ~GraphView()
         {
@@ -500,21 +510,28 @@ namespace TechTreeEditor
             GrantreqEdgeStyle.Dispose();
         }
 
+        //Receives notification when new tech selected in tech list view
+        public void Notify(uint id)
+        {
+            //Runs ViewTech asynchronously
+            if (!(bgWorker.IsBusy))
+                bgWorker.RunWorkerAsync(id);
+        }
+
         //*********************************************************************
         //******************************* Tasks *******************************
         //*********************************************************************
+        
 
         //Focuses the graph view on the given id
         public void ViewTech(uint id)
         {
-            if ((DateTime.Now - lastView).TotalSeconds < MIN_VIEWTECH_INTERVAL) return;
-            lastView = DateTime.Now;
             Clear();
             ClearData();
             techID = id;
             if (!(GetPrereqs() & GetGrantreqs() & GetPrereqFor() & GetGrantreqFor() & GetPermanizedBy()))
             {
-                techListView.Log("An error occurred while fetching data " +
+                techListView.QuietLog("An error occurred while fetching data " +
                     "for the local graph view. See log file for details. " +
                     "Continuing execution and display of available data.");
             }
@@ -552,7 +569,7 @@ namespace TechTreeEditor
         }
 
         //draws all the nodes and edges
-        public void DrawAll()
+        private void DrawAll()
         {
             DrawCenterNode();
             DrawPrereqs();
@@ -562,7 +579,7 @@ namespace TechTreeEditor
         }
 
         //Clears all data
-        public void ClearData()
+        private void ClearData()
         {
             techID = 0;
             prereqs.Clear();
@@ -582,7 +599,7 @@ namespace TechTreeEditor
         }
 
         //Clears the graph view
-        public void Clear()
+        private void Clear()
         {
             graphics.Clear(Color.White);
             graphics.Dispose();
@@ -733,6 +750,9 @@ namespace TechTreeEditor
         //************************ Database Functions *************************
         //*********************************************************************
 
+        //Diaper exception handling included in these functions because they
+        //typically run asynchronously
+
         private bool GetPrereqs()
         {
             bool success = true;
@@ -757,6 +777,17 @@ namespace TechTreeEditor
                     "for the graph view of tech with id " + HexConverter.IntToHex(techID) +
                     ": " + ex.Message, command.CommandText);
                 success = false;
+            }
+            catch (Exception ex)
+            {
+                techListView.QuietLog("An unknown error occurred while getting prereqs " +
+                    "for the graph view of tech with id " + HexConverter.IntToHex(techID) +
+                    ": " + ex.Message, command.CommandText);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
             }
             return success;
         }
@@ -785,6 +816,17 @@ namespace TechTreeEditor
                     ": " + ex.Message, command.CommandText);
                 success = false;
             }
+            catch (Exception ex)
+            {
+                techListView.QuietLog("An unknown error occurred while getting grantreqs " +
+                    "for the graph view of tech with id " + HexConverter.IntToHex(techID) +
+                    ": " + ex.Message, command.CommandText);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
             return success;
         }
         private bool GetPrereqFor()
@@ -811,6 +853,17 @@ namespace TechTreeEditor
                     "for the graph view of tech with id " + HexConverter.IntToHex(techID) +
                     ": " + ex.Message, command.CommandText);
                 success = false;
+            }
+            catch (Exception ex)
+            {
+                techListView.QuietLog("An unknown error occurred while getting prereqFor " +
+                    "for the graph view of tech with id " + HexConverter.IntToHex(techID) +
+                    ": " + ex.Message, command.CommandText);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
             }
             return success;
         }
@@ -839,6 +892,17 @@ namespace TechTreeEditor
                     ": " + ex.Message, command.CommandText);
                 success = false;
             }
+            catch (Exception ex)
+            {
+                techListView.QuietLog("An unknown error occurred while getting grantreqFor " +
+                    "for the graph view of tech with id " + HexConverter.IntToHex(techID) +
+                    ": " + ex.Message, command.CommandText);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
             return success;
         }
         private bool GetPermanizedBy()
@@ -866,7 +930,18 @@ namespace TechTreeEditor
                     ": " + ex.Message, command.CommandText);
                 success = false;
             }
-            return success;
+            catch (Exception ex)
+            {
+                techListView.QuietLog("An unknown error occurred while getting permanizedBy " +
+                    "for the graph view of tech with id " + HexConverter.IntToHex(techID) +
+                    ": " + ex.Message, command.CommandText);
+                success = false;
+            }
+            finally
+            {
+                connection.Close();
+            }
+        return success;
         }
 
         //*********************************************************************
@@ -880,18 +955,17 @@ namespace TechTreeEditor
             DrawAll();
         }
 
-        //Observer functions
-        public void OnNext(uint id)
+        //When closing, remove this as an observer
+        private void GraphView_FormClosing(object sender, FormClosingEventArgs e)
         {
-            ViewTech(id);
+            techListView.RemoveObserver(this);
         }
-        public void OnError(Exception ex)
-        {
-            techListView.Log("An unknown error occurred in GraphView.OnError: " + ex.Message);
-        }
-        public void OnCompleted()
-        {
 
+        //Handles the background worker's asynchronous work (calls ViewTech)
+        private void bgWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            uint id = (uint)(e.Argument);
+            ViewTech(id);
         }
     }
 }
