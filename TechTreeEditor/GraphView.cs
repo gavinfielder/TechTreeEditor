@@ -21,6 +21,7 @@ namespace TechTreeEditor
         private Graphics graphics;
         private TechListView techListView;
         private MySqlConnection connection;
+        public bool suppressNotify = false;
 
         //Graphics
         public class GraphNodeStyle
@@ -74,7 +75,7 @@ namespace TechTreeEditor
             //Draws a label with text wrapping
             private void DrawLabel(ref Graphics g, string label, Point location)
             {
-                const int minChar = 6;
+                const int minChar = 5;
                 const int maxChar = 16;
                 Point offset = new Point(0, 0);
                 if (label.Length <= maxChar)
@@ -461,7 +462,7 @@ namespace TechTreeEditor
         private List<uint> grantreqFor; //selected is grantreq for
         private List<uint> permanizedBy; //selected is permanized by
         private List<GraphNode> nodes; //holds the primary reference to all nodes
-        GraphNode centerNode; //holds an additional reference to the center node
+        private GraphNode centerNode; //holds an additional reference to the center node
         private List<GraphNode> prereqNodes; //holds additional references to the prereq nodes
         private List<GraphNode> grantreqNodes; //holds additional references to the grantreqs nodes
         private List<GraphNode> prereqForNodes; //holds additional references to the prereqFor nodes
@@ -513,6 +514,7 @@ namespace TechTreeEditor
         //Receives notification when new tech selected in tech list view
         public void Notify(uint id)
         {
+            if (suppressNotify) return;
             //Runs ViewTech asynchronously
             if (!(bgWorker.IsBusy))
                 bgWorker.RunWorkerAsync(id);

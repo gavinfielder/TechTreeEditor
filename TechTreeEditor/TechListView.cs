@@ -129,6 +129,12 @@ namespace TechTreeEditor
             int b = rows - 1;
             int c = (b - a) / 2;
             uint current = HexConverter.HexToInt(TechListGrid.Rows[c].Cells[0].Value as string);
+            //Check last record
+            if (HexConverter.HexToInt(TechListGrid.Rows[b].Cells[0].Value as string) == id)
+            {
+                current = id; //skips the loop
+                c = b; //postcondition is c is target row
+            }
             while ((current != id) && (b - a > 1))
             {
                 current = HexConverter.HexToInt(TechListGrid.Rows[c].Cells[0].Value as string);
@@ -212,7 +218,10 @@ namespace TechTreeEditor
         //Refreshes the list view
         public void RefreshList()
         {
+            //Suppress notification to the graph view while refreshing
+            graphView.suppressNotify = true;
             FetchTechList(currentFilters);
+            graphView.suppressNotify = false;
         }
 
         //Add or remove observers

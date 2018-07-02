@@ -1092,7 +1092,7 @@ namespace TechTreeEditor
             }
             finally
             {
-                techListView.Log("Tech inserted: " + current.techName +
+                techListView.QuietLog("Tech inserted: " + current.techName +
                     "(" + HexConverter.IntToHex(current.techID) + ")",
                     command.CommandText);
                 connection.Close();
@@ -1131,7 +1131,7 @@ namespace TechTreeEditor
             finally
             {
                 connection.Close();
-                techListView.Log(numberOfPrereqs + " prerequisites inserted for id " +
+                techListView.QuietLog(numberOfPrereqs + " prerequisites inserted for id " +
                     HexConverter.IntToHex(current.techID) + ".", command.CommandText);
             }
             return success;
@@ -1167,7 +1167,7 @@ namespace TechTreeEditor
             finally
             {
                 connection.Close();
-                techListView.Log(numberOfGrantreqs + " grantrequisites inserted for id " +
+                techListView.QuietLog(numberOfGrantreqs + " grantrequisites inserted for id " +
                     HexConverter.IntToHex(current.techID) + ".", command.CommandText);
             }
             return success;
@@ -1203,7 +1203,7 @@ namespace TechTreeEditor
             finally
             {
                 connection.Close();
-                techListView.Log(numberOfPermanizes + " permanizes " +
+                techListView.QuietLog(numberOfPermanizes + " permanizes " +
                     "relationships inserted for id " + 
                     HexConverter.IntToHex(current.techID) + ".",
                     command.CommandText);
@@ -1216,10 +1216,13 @@ namespace TechTreeEditor
             bool success = true;
             MySqlCommand command = new MySqlCommand();
             command.Connection = connection;
-            command.CommandText = "REPLACE tech " +
-                "VALUES(" + current.techID + ",'" + current.techName + "','" +
-                current.techCategory + "','" + current.techFieldName + "'," +
-                current.techCostPerDay + "," + current.techNumberDays + ");";
+            command.CommandText = "UPDATE tech " +
+                "SET name='" + current.techName + "', " +
+                "category='" + current.techCategory + "', " +
+                "field_name='" + current.techFieldName + "', " +
+                "cost_per_day=" + current.techCostPerDay + ", " +
+                "number_days=" + current.techNumberDays + " " +
+                "WHERE id=" + current.techID + ";";
             try
             {
                 connection.Open();
@@ -1227,14 +1230,14 @@ namespace TechTreeEditor
             }
             catch (MySqlException ex)
             {
-                techListView.Log("An error occurred while replacing tech " +
+                techListView.Log("An error occurred while updating tech " +
                     HexConverter.IntToHex(current.techID) + ": " + ex.Message,
                     command.CommandText);
                 success = false;
             }
             finally
             {
-                techListView.Log("Tech replaced: " + current.techName + 
+                techListView.QuietLog("Tech updated: " + current.techName + 
                     "(" + HexConverter.IntToHex(current.techID) + ")", 
                     command.CommandText);
                 connection.Close();
@@ -1269,7 +1272,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Deleted prereqs for id " +
+                techListView.QuietLog("Deleted prereqs for id " +
                     HexConverter.IntToHex(current.techID) + ".", 
                     command.CommandText);
             }
@@ -1301,7 +1304,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Deleted grantreqs for id " +
+                techListView.QuietLog("Deleted grantreqs for id " +
                     HexConverter.IntToHex(current.techID) + ".",
                     command.CommandText);
             }
@@ -1333,7 +1336,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Deleted permanizes for id " +
+                techListView.QuietLog("Deleted permanizes for id " +
                     HexConverter.IntToHex(current.techID) + ".",
                     command.CommandText);
             }
@@ -1367,7 +1370,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Deleted original tech with id " +
+                techListView.QuietLog("Deleted original tech with id " +
                     HexConverter.IntToHex(original.techID) + ".",
                     command.CommandText);
             }
@@ -1409,7 +1412,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Deleted connections to original tech with id " +
+                techListView.QuietLog("Deleted connections to original tech with id " +
                     HexConverter.IntToHex(original.techID) + ".",
                     command.CommandText);
             }
@@ -1469,7 +1472,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Inserted connections to updated tech with id " +
+                techListView.QuietLog("Inserted connections to updated tech with id " +
                     HexConverter.IntToHex(current.techID) + ".",
                     command.CommandText);
             }
@@ -1503,7 +1506,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Deleted prereqs of original tech with id " +
+                techListView.QuietLog("Deleted prereqs of original tech with id " +
                     HexConverter.IntToHex(original.techID) + ".",
                     command.CommandText);
             }
@@ -1537,7 +1540,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Deleted grantreqs of original tech with id " +
+                techListView.QuietLog("Deleted grantreqs of original tech with id " +
                     HexConverter.IntToHex(original.techID) + ".",
                     command.CommandText);
             }
@@ -1571,7 +1574,7 @@ namespace TechTreeEditor
             }
             if (success)
             {
-                techListView.Log("Deleted permanizes of original tech with id " +
+                techListView.QuietLog("Deleted permanizes of original tech with id " +
                     HexConverter.IntToHex(original.techID) + ".",
                     command.CommandText);
             }
@@ -1583,21 +1586,24 @@ namespace TechTreeEditor
         //*********************************************************************
         private void IDInput_TextChanged(object sender, EventArgs e)
         {
-            //Validate valid hex. If not hex, remove all non-hex characters
-            if (IDRgx.IsMatch(IDInput.Text))
+            if (IDInput.Text != "")
             {
-                int i = 0;
-                while (i < IDInput.Text.Length)
+                //Validate valid hex. If not hex, remove all non-hex characters
+                if (IDRgx.IsMatch(IDInput.Text))
                 {
-                    //Remove all non-hex characters
-                    if (IDRgx.IsMatch(IDInput.Text.Substring(i, 1)))
-                        IDInput.Text = IDInput.Text.Substring(0, i) + IDInput.Text.Substring(i + 1);
-                    else i++;
+                    int i = 0;
+                    while (i < IDInput.Text.Length)
+                    {
+                        //Remove all non-hex characters
+                        if (IDRgx.IsMatch(IDInput.Text.Substring(i, 1)))
+                            IDInput.Text = IDInput.Text.Substring(0, i) + IDInput.Text.Substring(i + 1);
+                        else i++;
+                    }
                 }
+                current.techID = HexConverter.HexToInt(IDInput.Text);
+                current.techIDChanged = (current.techID != original.techID);
+                UpdateTitleBar();
             }
-            current.techID = HexConverter.HexToInt(IDInput.Text);
-            current.techIDChanged = (current.techID != original.techID);
-            UpdateTitleBar();
         }
         private void IDInput_Leave(object sender, EventArgs e)
         {
